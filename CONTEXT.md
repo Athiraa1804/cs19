@@ -167,6 +167,7 @@ Example behavior:
 * "work from home" should match remote/offline internship FAQs
 * "how long" should match internship duration FAQs
 * "joining internship" should match accepting or joining VINS internship FAQs
+* "time off" and "sick leave" should match leave/holiday FAQs
 
 Search priority:
 
@@ -174,14 +175,14 @@ Search priority:
 2. Similar solved queries
 3. Open discussions
 
-Search should be lightweight and fast.
+Search implementation notes:
 
-Recommended implementation:
-
-* Fuse.js
-* simple synonym dictionary
-* lightweight ranking logic
-* local mock data initially
+* Uses a local synonym dictionary (no Fuse.js dependency in MVP)
+* Multi-word phrase pre-check: full query string is checked against the synonym map first, before splitting into individual words. This ensures phrase queries like "time off" and "work from home" expand correctly.
+* Synonym map uses bidirectional expansion: a word can be a key or a value, and both directions are checked.
+* Fuzzy fallback via Levenshtein distance for typo tolerance.
+* Results ranked by relevance score (question match > category > tag > base score), with helpfulCount as tiebreaker.
+* Debounced input (300ms) to avoid recomputing on every keystroke.
 
 The MVP does not require real semantic AI search.
 
@@ -1040,23 +1041,31 @@ A feature is considered complete only if:
 
 Current phase:
 
-* planning and architecture finalization
+* Tier 1 feature implementation in progress (feature/day-1-faq-foundation)
 
-Completed:
+## Completed
 
 * MVP direction defined
 * context document drafted
 * engineering standards drafted
 * teammate feature ideas collected
 * priority tiers defined
+* project scaffold (React + TypeScript + Vite + Tailwind)
+* FAQ feature — full implementation
+  * types, mock data (21 FAQs, 9 categories), service layer
+  * smart search with synonym expansion, fuzzy/typo tolerance, ranking
+  * multi-word phrase pre-check for queries like "time off", "work from home"
+  * category filter, search bar, accordion UI
+  * loading, error, empty states
+* React Router wired to `/faqs`
 
-Pending:
+## In Progress
 
-* static UI
-* mock data
-* mock services
-* Zustand integration
-* smart search implementation
+* Tier 1 remaining: Raise Query, Query Discussion, Admin Verification, Convert to FAQ
+
+## Pending
+
+* Zustand integration (when shared state is needed)
 * query creation flow
 * discussion flow
 * admin verification flow
