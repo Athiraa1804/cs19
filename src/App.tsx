@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { RaiseQueryPage } from './features/queries/pages/RaiseQueryPage';
 import { MyQuestionsPage } from './features/queries/pages/MyQuestionsPage';
+import { QueryDiscussionPage } from './features/queries/pages/QueryDiscussionPage';
+import { AdminQueriesPage } from './features/admin/pages/AdminQueriesPage';
+import { isAdmin } from './features/queries/types/roleSim';
 
 function NavBar() {
   const location = useLocation();
@@ -32,6 +35,18 @@ function NavBar() {
             >
               My Questions
             </Link>
+            {isAdmin() && (
+              <Link
+                to="/admin/queries"
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors min-w-0 break-words ${
+                  isActive('/admin/queries')
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'text-purple-600 hover:bg-purple-50'
+                }`}
+              >
+                Query Review
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -49,7 +64,8 @@ export function App() {
             <Route path="/" element={<NavigateToQueries />} />
             <Route path="/queries/raise" element={<RaiseQueryPage />} />
             <Route path="/queries/my" element={<MyQuestionsPage />} />
-            <Route path="/queries/:id" element={<QueryDetailPlaceholder />} />
+            <Route path="/queries/:id" element={<QueryDiscussionPage />} />
+            <Route path="/admin/queries" element={<AdminQueriesPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
@@ -80,12 +96,3 @@ function NotFound() {
   );
 }
 
-function QueryDetailPlaceholder() {
-  return (
-    <div className="max-w-lg mx-auto px-4 py-16 text-center min-w-0">
-      <div className="text-4xl mb-3">💬</div>
-      <h1 className="text-xl font-bold text-gray-800 mb-2">Query Discussion</h1>
-      <p className="text-sm text-gray-500">Day 3 feature — coming soon!</p>
-    </div>
-  );
-}

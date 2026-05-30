@@ -12,6 +12,8 @@ export interface Query {
   createdBy: string;
   latestReplyPreview?: string;
   matchedFaqIds?: string[];
+  replyCount?: number;
+  verifiedReplyId?: string;
 }
 
 export interface QueryFormData {

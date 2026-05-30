@@ -98,15 +98,27 @@ const faqs: Faq[] = [
   },
 ];
 
+// Session-scoped FAQs added when admins convert verified replies to FAQs
+const convertedFaqs: Faq[] = [];
+
+export function addConvertedFaq(faq: Faq): void {
+  convertedFaqs.push(faq);
+}
+
+export function getConvertedFaqs(): Faq[] {
+  return [...convertedFaqs];
+}
+
 export const faqMockService = {
   getAll(): ApiResponse<Faq[]> {
-    return { success: true, data: faqs };
+    return { success: true, data: [...faqs, ...convertedFaqs] };
   },
 
   searchByText(searchText: string): ApiResponse<Faq[]> {
     const lower = searchText.toLowerCase();
     const words = lower.split(/\s+/);
-    const scored = faqs
+    const all = [...faqs, ...convertedFaqs];
+    const scored = all
       .map((faq) => {
         const combined = `${faq.question} ${faq.answer} ${faq.tags.join(' ')} ${faq.category}`.toLowerCase();
         const score = words.filter((w) => combined.includes(w)).length;
