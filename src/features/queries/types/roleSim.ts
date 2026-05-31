@@ -5,7 +5,8 @@
  */
 export type SimulatedRole = 'intern' | 'admin';
 
-export const CURRENT_ROLE: SimulatedRole = 'intern'; // Change to 'intern' to simulate i
+export const CURRENT_ROLE: SimulatedRole = 'admin'; // Change to 'intern' to simulate i
+
 
 export function isAdmin(): boolean {
   return CURRENT_ROLE === 'admin';
