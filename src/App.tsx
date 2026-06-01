@@ -1,20 +1,37 @@
-﻿import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { RaiseQueryPage } from './features/queries/pages/RaiseQueryPage';
 import { MyQuestionsPage } from './features/queries/pages/MyQuestionsPage';
 import { QueryDiscussionPage } from './features/queries/pages/QueryDiscussionPage';
 import { AdminQueriesPage } from './features/admin/pages/AdminQueriesPage';
+import { FAQPage } from './features/faq/pages/FAQPage';
 import { isAdmin } from './features/queries/types/roleSim';
 
 function NavBar() {
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div className="max-w-lg mx-auto px-4">
         <div className="flex items-center justify-between h-14 min-w-0">
-          <span className="font-bold text-gray-900 text-base min-w-0 break-words">cs19 FAQ</span>
+          <Link
+            to="/"
+            className="font-bold text-gray-900 text-base min-w-0 break-words hover:text-blue-600 transition-colors"
+          >
+            cs19 FAQ
+          </Link>
           <div className="flex items-center gap-1">
+            <Link
+              to="/faqs"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors min-w-0 break-words ${
+                isActive('/faqs')
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              FAQ
+            </Link>
             <Link
               to="/queries/raise"
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors min-w-0 break-words ${
@@ -61,7 +78,8 @@ export function App() {
         <NavBar />
         <main>
           <Routes>
-            <Route path="/" element={<NavigateToQueries />} />
+            <Route path="/" element={<NavigateToFaqs />} />
+            <Route path="/faqs" element={<FAQPage />} />
             <Route path="/queries/raise" element={<RaiseQueryPage />} />
             <Route path="/queries/my" element={<MyQuestionsPage />} />
             <Route path="/queries/:id" element={<QueryDiscussionPage />} />
@@ -74,25 +92,26 @@ export function App() {
   );
 }
 
-function NavigateToQueries() {
+function NavigateToFaqs() {
   const navigate = useNavigate();
-  navigate('/queries/raise', { replace: true });
+  navigate('/faqs', { replace: true });
   return null;
 }
 
 function NotFound() {
   return (
     <div className="max-w-lg mx-auto px-4 py-16 text-center min-w-0">
-      <div className="text-4xl mb-3">≡ƒöì</div>
+      <div className="text-4xl mb-3">⁠⁠≡</div>
       <h1 className="text-xl font-bold text-gray-800 mb-2">Page Not Found</h1>
-      <p className="text-sm text-gray-500 mb-6">The page you're looking for doesn't exist.</p>
+      <p className="text-sm text-gray-500 mb-6">
+        The page you're looking for doesn't exist.
+      </p>
       <Link
-        to="/queries/raise"
+        to="/faqs"
         className="inline-flex bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-6 rounded-lg transition-colors"
       >
-        Go to Raise Query
+        Go to FAQ Page
       </Link>
     </div>
   );
 }
-

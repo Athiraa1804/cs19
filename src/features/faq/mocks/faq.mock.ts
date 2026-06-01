@@ -39,7 +39,6 @@ export const faqMockService = {
 };
 
 export const mockFaqs: FAQ[] = [
-  // ── Getting Started ──────────────────────────────────────
   {
     id: 'faq-001',
     question: 'How do I accept and join the VINS internship?',
@@ -76,13 +75,11 @@ export const mockFaqs: FAQ[] = [
     createdAt: '2024-03-15T00:00:00Z',
     updatedAt: '2026-01-20T09:00:00Z',
   },
-
-  // ── Stipend & Benefits ───────────────────────────────────
   {
     id: 'faq-004',
     question: 'When and how will I receive my stipend?',
     answer:
-      'Stipends are processed on the 28th of every month for the previous month\'s work. Payment is made via bank transfer to the account details you submitted during onboarding. If you have not received your stipend by the 5th of the following month, raise a query with your manager and copy the finance team at finance@vicharanashala.com.',
+      "Stipends are processed on the 28th of every month for the previous month's work. Payment is made via bank transfer to the account details you submitted during onboarding. If you have not received your stipend by the 5th of the following month, raise a query with your manager and copy the finance team at finance@vicharanashala.com.",
     category: 'Stipend & Benefits',
     tags: ['stipend', 'salary', 'payment', 'money', 'pay', 'monthly'],
     helpfulCount: 421,
@@ -114,13 +111,11 @@ export const mockFaqs: FAQ[] = [
     createdAt: '2024-05-01T00:00:00Z',
     updatedAt: '2025-07-20T09:30:00Z',
   },
-
-  // ── Internship Duration ──────────────────────────────────
   {
     id: 'faq-007',
     question: 'How long does the VINS internship last?',
     answer:
-      'The standard VINS internship duration is 3 months for most tracks. Some specialised tracks (e.g., ML, full-stack) run for 6 months. Extension beyond the standard duration requires your manager\'s approval and a review of your project milestones. The exact start and end dates are stated in your internship agreement.',
+      "The standard VINS internship duration is 3 months for most tracks. Some specialised tracks (e.g., ML, full-stack) run for 6 months. Extension beyond the standard duration requires your manager's approval and a review of your project milestones. The exact start and end dates are stated in your internship agreement.",
     category: 'Internship Duration',
     tags: ['duration', 'how long', 'months', 'timeline', 'length', 'tenure'],
     helpfulCount: 334,
@@ -152,13 +147,11 @@ export const mockFaqs: FAQ[] = [
     createdAt: '2024-07-01T00:00:00Z',
     updatedAt: '2026-02-10T14:00:00Z',
   },
-
-  // ── Remote / Offline ─────────────────────────────────────
   {
     id: 'faq-010',
     question: 'Can I work from home or is it office-only?',
     answer:
-      'VINS internships support a hybrid model. You may work remotely for up to 3 days per week at your manager\'s discretion. The remaining days may require physical presence depending on your team\'s norms. Before starting WFH, ensure you have a stable internet connection and a suitable workspace. Notify your manager of any scheduled in-office days.',
+      "VINS internships support a hybrid model. You may work remotely for up to 3 days per week at your manager's discretion. The remaining days may require physical presence depending on your team's norms. Before starting WFH, ensure you have a stable internet connection and a suitable workspace. Notify your manager of any scheduled in-office days.",
     category: 'Remote/Offline',
     tags: ['wfh', 'work from home', 'remote', 'home', 'hybrid', 'online'],
     helpfulCount: 387,
@@ -190,8 +183,6 @@ export const mockFaqs: FAQ[] = [
     createdAt: '2024-09-01T00:00:00Z',
     updatedAt: '2025-12-10T13:00:00Z',
   },
-
-  // ── Projects ─────────────────────────────────────────────
   {
     id: 'faq-013',
     question: 'How are internship projects assigned?',
@@ -216,8 +207,6 @@ export const mockFaqs: FAQ[] = [
     createdAt: '2024-10-01T00:00:00Z',
     updatedAt: '2025-08-30T14:00:00Z',
   },
-
-  // ── Badges ───────────────────────────────────────────────
   {
     id: 'faq-015',
     question: 'How do I earn badges during my internship?',
@@ -230,8 +219,6 @@ export const mockFaqs: FAQ[] = [
     createdAt: '2024-11-01T00:00:00Z',
     updatedAt: '2025-10-18T09:00:00Z',
   },
-
-  // ── Certificate ──────────────────────────────────────────
   {
     id: 'faq-016',
     question: 'When and how will I receive my internship certificate?',
@@ -256,8 +243,6 @@ export const mockFaqs: FAQ[] = [
     createdAt: '2024-04-15T00:00:00Z',
     updatedAt: '2025-09-01T10:00:00Z',
   },
-
-  // ── Support ──────────────────────────────────────────────
   {
     id: 'faq-018',
     question: 'Who do I contact if I have a problem with my stipend?',
@@ -282,8 +267,6 @@ export const mockFaqs: FAQ[] = [
     createdAt: '2024-06-01T00:00:00Z',
     updatedAt: '2026-02-28T10:00:00Z',
   },
-
-  // ── Crowd-sourced ────────────────────────────────────────
   {
     id: 'faq-020',
     question: 'Can interns work on multiple projects simultaneously?',
