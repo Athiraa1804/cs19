@@ -25,9 +25,15 @@ function scoreMatch(tokens: string[], targetText: string): number {
   return matches.length / Math.max(tokens.length, targetTokens.length);
 }
 
+<<<<<<< HEAD
 function buildSearchText(item: Query | FAQ, isFaq: boolean): string {
   if (isFaq) {
     const f = item as FAQ;
+=======
+function buildSearchText(item: Query | FAQ, isFaq: boolean): string {
+  if (isFaq) {
+    const f = item as FAQ;
+>>>>>>> feature/day-2-query-flow
     return `${f.question} ${f.answer} ${f.tags.join(' ')} ${f.category}`;
   }
   const q = item as Query;
