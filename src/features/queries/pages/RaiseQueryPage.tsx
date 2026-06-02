@@ -49,8 +49,8 @@ export function RaiseQueryPage({ onSuccess }: Props) {
   }
 
   function handleConfirmSubmit() {
-    if (!pendingData || isSubmitting) return;
-    setStage('submitting');
+    if (!pendingData) return;
+    setStage('submitting'); // set synchronously to block double-click
 
     queryService
       .create({ ...pendingData, createdBy: CURRENT_USER_ID })

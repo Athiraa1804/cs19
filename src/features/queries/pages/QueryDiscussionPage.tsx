@@ -28,6 +28,7 @@ export function QueryDiscussionPage() {
   const [convertError, setConvertError] = useState('');
   const [convertSuccess, setConvertSuccess] = useState('');
   const [submittingReply, setSubmittingReply] = useState(false);
+  const [replySubmitError, setReplySubmitError] = useState('');
 
   const showAdminActions = isAdmin();
 
@@ -59,6 +60,7 @@ export function QueryDiscussionPage() {
   // Handle new reply submission
   function handleReplySubmit(body: string, authorName: string, authorRole: AuthorRole) {
     if (!id) return;
+    setReplySubmitError('');
     setSubmittingReply(true);
     replyService
       .create({ queryId: id, body, authorName, authorRole })
@@ -68,10 +70,13 @@ export function QueryDiscussionPage() {
           setReplies((prev) => [...prev, res.data!]);
           // Update reply count on query
           if (query) setQuery((q) => q ? { ...q, replyCount: (q.replyCount ?? 0) + 1 } : q);
+        } else {
+          setReplySubmitError(res.error ?? 'Failed to post reply. Please try again.');
         }
       })
       .catch(() => {
         setSubmittingReply(false);
+        setReplySubmitError('Network error. Please check your connection and try again.');
       });
   }
 
@@ -215,8 +220,14 @@ export function QueryDiscussionPage() {
           </div>
 
           {/* Reply form */}
+          {/* Reply form */}
           <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4 shadow-sm min-w-0 break-words">
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Add a Reply</h3>
+            {replySubmitError && (
+              <div className="mb-3 bg-red-50 border border-red-200 rounded-lg p-3 min-w-0 break-words">
+                <p className="text-sm text-red-700">{replySubmitError}</p>
+              </div>
+            )}
             <ReplyForm
               isSubmitting={submittingReply}
               currentRole={CURRENT_ROLE}

@@ -5,7 +5,7 @@
 
 import type { FAQ, GetFaqsParams } from '../types/faq.types';
 import type { ApiResponse } from '../../../shared/types/apiResponse';
-import { mockFaqs } from '../mocks/faq.mock';
+import { mockFaqs, getConvertedFaqs } from '../mocks/faq.mock';
 
 // Simulated network delay (ms) — makes loading states realistic
 const DELAY = 600;
@@ -21,7 +21,7 @@ export async function getFaqs(
   await delay(DELAY);
 
   try {
-    const data = [...mockFaqs];
+    const data = [...mockFaqs, ...getConvertedFaqs()];
     return { success: true, data };
   } catch {
     return { success: false, error: 'Failed to load FAQs. Please try again.' };

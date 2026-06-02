@@ -26,11 +26,12 @@ export function ReplyList({
     );
   }
 
-  // Verified reply shown first, then others in chronological order
-  const sorted = [
-    ...replies.filter((r) => r.isVerified),
-    ...replies.filter((r) => !r.isVerified),
-  ];
+  // Verified reply shown first, then unverified in chronological order
+  const verified = replies.filter((r) => r.isVerified);
+  const unverified = replies
+    .filter((r) => !r.isVerified)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const sorted = [...verified, ...unverified];
 
   return (
     <div className="flex flex-col gap-3">

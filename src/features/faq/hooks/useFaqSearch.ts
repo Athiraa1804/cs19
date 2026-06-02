@@ -17,7 +17,6 @@ export interface UseFaqSearchResult {
   faqs: FAQ[];
   loading: boolean;
   error: string | null;
-  retryKey: number;
   retry: () => void;
 }
 
@@ -30,11 +29,9 @@ export function useFaqSearch(
   const [allFaqs, setAllFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryKey, setRetryKey] = useState(0);
-
   const debouncedSearch = useDebouncedValue(search, debounceMs);
 
-  // 1. Fetch all FAQs from service on mount / retry
+  // Fetch all FAQs from service on mount
   useEffect(() => {
     let cancelled = false;
 
@@ -58,7 +55,7 @@ export function useFaqSearch(
     return () => {
       cancelled = true;
     };
-  }, [retryKey]);
+  }, []);
 
   // 2. Apply category filter + smart search (synchronous, runs on debounced input)
   const filtered = (() => {
@@ -68,8 +65,18 @@ export function useFaqSearch(
   })();
 
   function retry() {
-    setRetryKey((k) => k + 1);
+    setAllFaqs([]);
+    setLoading(true);
+    setError(null);
+    getFaqs().then((response) => {
+      if (response.success && response.data) {
+        setAllFaqs(response.data);
+      } else {
+        setError(response.error ?? 'Unknown error loading FAQs.');
+      }
+      setLoading(false);
+    });
   }
 
-  return { faqs: filtered, loading, error, retryKey, retry };
+  return { faqs: filtered, loading, error, retry };
 }
