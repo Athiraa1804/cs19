@@ -29,6 +29,8 @@ export async function getFaqs(
 }
 
 // ── GET /faqs?search=&category= ────────────────────────────
+// NOTE: Currently unused by the frontend (client-side search via faqSearchUtils).
+// Reserved for future backend-driven /server-side search when FAQ count grows.
 export async function searchFaqs(
   params: GetFaqsParams
 ): Promise<ApiResponse<FAQ[]>> {

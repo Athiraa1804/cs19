@@ -15,7 +15,8 @@ export function FaqCategoryFilter({
 }: FaqCategoryFilterProps) {
   return (
     <div
-      role="group" /* aria-label="Filter by category" */
+      role="group"
+      aria-label="Filter FAQs by category"
       className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide"
     >
       {categories.map((cat) => {

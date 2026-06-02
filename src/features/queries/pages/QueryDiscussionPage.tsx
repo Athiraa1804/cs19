@@ -220,7 +220,6 @@ export function QueryDiscussionPage() {
           </div>
 
           {/* Reply form */}
-          {/* Reply form */}
           <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4 shadow-sm min-w-0 break-words">
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Add a Reply</h3>
             {replySubmitError && (
