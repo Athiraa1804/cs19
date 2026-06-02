@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import type { FAQ } from '../types/faq.types';
+import { isAdmin } from '../../queries/types/roleSim';
 
 interface FaqAccordionItemProps {
   faq: FAQ;
@@ -83,17 +84,19 @@ export function FaqAccordionItem({ faq, onHelpful }: FaqAccordionItemProps) {
               </div>
             )}
 
-            {/* Helpful button */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onHelpful?.(faq.id);
-              }}
-              className="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium focus:outline-none focus-visible:underline"
-            >
-              👍 Helpful
-            </button>
+            {/* Helpful button — interns only */}
+            {!isAdmin() && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onHelpful?.(faq.id);
+                }}
+                className="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium focus:outline-none focus-visible:underline"
+              >
+                👍 Helpful
+              </button>
+            )}
           </div>
         </div>
       )}

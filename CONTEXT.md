@@ -1065,15 +1065,23 @@ Current phase:
 * priority tiers defined
 * project scaffold (React + TypeScript + Vite + Tailwind)
 * FAQ feature — full implementation
-  * types, mock data (8 FAQs, categories), service layer
+  * types, service layer, mock data (26 realistic Samagama/VINS internship FAQs)
   * smart search with synonym expansion, fuzzy/typo tolerance, ranking
   * category filter, search bar, accordion UI
   * loading, error, empty states
+* FAQ mock data uses realistic Samagama/VINS-style internship content:
+  * Samagama portal login, profile setup, CV upload, interview link issues
+  * Laptop/desktop requirements, NOC submission, offer acceptance
+  * Online vs offline mode, mentor/sync sessions
+  * Project/GitHub submission, certificate timeline, stipend and leave
+  * Support and escalation process
+  * No scraped or confidential data — all content is official-style and beginner-friendly
 * Raise Query feature
   * form, validation, duplicate detection, FAQ + similar query suggestions
   * loading/error/success states
 * My Questions page — tracks user's own queries
 * Query Discussion page — replies, verified answer badge, reply form
+  * Reply submission errors shown to user via visible error banner
 * Admin Query Review page at `/admin/queries`
   * lists all queries grouped by status
   * links to discussion page for each query
@@ -1081,18 +1089,28 @@ Current phase:
   * Verify button marks a reply as verified (verified replies float to top)
   * + FAQ button opens inline dialog, pre-fills question from reply body
   * Convert creates a new FAQ via `adminService.convertReplyToFaq()`
-* Role simulation via `roleSim.ts` — `CURRENT_ROLE = 'intern' | 'admin'`
-  * Admin-only UI gates on `isAdmin()` check
-  * Interns cannot see Verify or + FAQ buttons
+* Role-based navigation and route guards
+  * Intern nav: FAQs, Raise Query, My Questions — Query Review hidden
+  * Admin nav: FAQs, Query Review — Raise Query and My Questions hidden
+  * Route-level guards: interns redirected from `/admin/queries` → `/faqs`
+  * Route-level guards: admins redirected from `/queries/raise` and `/queries/my` → `/admin/queries`
+  * Root `/` redirects to `/queries/raise` (intern) or `/admin/queries` (admin)
+* Helpful button on FAQ answers — visible to interns, hidden for admins
 
 ## Mock / Local Data (MVP)
 
-All data during MVP phase is mock/local only:
+All data during MVP phase is mock/local only. No backend integration yet.
 
-* `faq.mock.ts` — static seed FAQs + session-scoped converted FAQs
+* `faq.mock.ts` — static seed FAQs (26 realistic Samagama/VINS FAQs, source: "existing") + session-scoped converted FAQs (source: "crowd-sourced")
 * `query.mock.ts` — static seed queries
 * `reply.mock.ts` — static seed replies + session-scoped new replies
 * `queryService`, `replyService`, `adminService`, `faqMockService` — mock service layers
+
+FAQ source rules:
+* `source: "existing"` — official/preloaded FAQs from `faq.mock.ts`
+* `source: "crowd-sourced"` — FAQs converted from verified replies at runtime
+
+No private links, credentials, mentor phone numbers, personal emails, or confidential data are stored.
 
 ## Backend Integration Plan
 
@@ -1111,9 +1129,8 @@ Pages and components (`QueryDiscussionPage`, `ReplyCard`, `AdminConvertToFaqDial
 
 ## Pending
 
+* real backend integration (service layer and mock files to be replaced only)
 * Zustand integration (when shared state is needed)
-* real backend integration
-* FAQ page listing all FAQs including crowd-sourced converted FAQs
 
 ---
 

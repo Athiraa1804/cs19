@@ -11,7 +11,7 @@
  */
 export type SimulatedRole = 'intern' | 'admin';
 
-export const CURRENT_ROLE: SimulatedRole = 'admin'; // Change to 'admin' to simulate admin view
+export const CURRENT_ROLE: SimulatedRole = 'intern'; // Change to 'admin' to simulate admin view
 
 
 export function isAdmin(): boolean {

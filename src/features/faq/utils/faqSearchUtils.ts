@@ -8,29 +8,80 @@ import type { FAQ } from '../types/faq.types';
 // ── Synonym map ──────────────────────────────────────────────
 // Maps common query words → the terms that should match in FAQ text
 const SYNONYMS: Record<string, string[]> = {
+  // Money / pay
   money: ['stipend', 'salary', 'pay', 'payment', 'income', 'financial'],
-  'work from home': ['wfh', 'remote', 'home', 'hybrid', 'online'],
-  'work from anywhere': ['wfh', 'remote', 'home', 'hybrid', 'online'],
-  'how long': ['duration', 'timeline', 'months', 'tenure', 'length'],
-  'joining internship': ['joining', 'accept', 'offer', 'onboarding', 'start'],
-  'joining': ['joining', 'accept', 'offer', 'onboarding', 'start'],
-  certificate: ['certificate', 'completion', 'completion letter', 'document'],
-  completion: ['certificate', 'completion', 'completion letter', 'document'],
   pay: ['stipend', 'salary', 'payment', 'money'],
   salary: ['stipend', 'salary', 'pay', 'payment', 'money'],
+  stipend: ['stipend', 'salary', 'pay', 'payment', 'money'],
+
+  // Work mode
+  'work from home': ['wfh', 'remote', 'home', 'hybrid', 'online'],
+  'work from anywhere': ['wfh', 'remote', 'home', 'hybrid', 'online'],
   wfh: ['wfh', 'remote', 'work from home', 'hybrid', 'online'],
   remote: ['remote', 'wfh', 'work from home', 'hybrid', 'online'],
-  stipend: ['stipend', 'salary', 'pay', 'payment', 'money'],
+  online: ['online', 'remote', 'wfh', 'offline', 'in-person'],
+  offline: ['offline', 'in-person', 'office', 'online', 'remote'],
+
+  // Duration / timeline
+  'how long': ['duration', 'timeline', 'months', 'tenure', 'length'],
+
+  // Joining / offer
+  'joining internship': ['joining', 'accept', 'offer', 'onboarding', 'start'],
+  joining: ['joining', 'accept', 'offer', 'onboarding', 'start'],
+  accept: ['accept', 'offer', 'joining', 'onboarding'],
+  offer: ['offer', 'accept', 'joining', 'application'],
+
+  // Certificate / document
+  certificate: ['certificate', 'completion', 'completion letter', 'document'],
+  completion: ['certificate', 'completion', 'completion letter', 'document'],
+
+  // Leave
   leave: ['leave', 'holiday', 'sick', 'time off', 'pto'],
   holiday: ['leave', 'holiday', 'sick', 'time off', 'pto'],
   'time off': ['leave', 'holiday', 'sick', 'time off', 'pto'],
   'sick leave': ['leave', 'holiday', 'sick', 'time off', 'pto'],
+
+  // Projects
   project: ['project', 'assignment', 'task', 'work', 'allocation'],
-  badge: ['badge', 'gamification', 'earn', 'achievement', 'skills'],
+
+  // Tax / finance
   tax: ['tax', 'tds', 'income', 'salary', 'financial'],
-  laptop: ['laptop', 'equipment', 'software', 'setup', 'requirements'],
+
+  // Equipment
+  laptop: ['laptop', 'desktop', 'equipment', 'setup', 'requirements'],
   software: ['software', 'tools', 'laptop', 'setup', 'requirements'],
-  manager: ['manager', 'unavailable', 'leave', 'escalate'],
+
+  // Portal / Samagama
+  portal: ['samagama', 'login', 'profile', 'application', 'samagama portal'],
+  samagama: ['samagama', 'portal', 'login', 'profile', 'application'],
+  login: ['login', 'sign in', 'password', 'forgot', 'reset', 'access', 'samagama'],
+  password: ['password', 'forgot', 'reset', 'login', 'sign in'],
+  'forgot password': ['forgot', 'reset', 'password', 'login', 'sign in'],
+
+  // CV / resume / upload
+  cv: ['cv', 'resume', 'upload', 'document', 'pdf', 'attach'],
+  resume: ['resume', 'cv', 'upload', 'document', 'pdf', 'attach'],
+  upload: ['upload', 'file', 'document', 'cv', 'resume', 'pdf'],
+
+  // Interview / assessment
+  interview: ['interview', 'assessment', 'test', 'exam', 'link'],
+  assessment: ['assessment', 'interview', 'test', 'exam', 'link'],
+  test: ['test', 'interview', 'assessment', 'exam', 'link'],
+
+  // NOC / documentation
+  noc: ['noc', 'no objection certificate', 'document', 'certificate', 'college', 'employer'],
+  document: ['document', 'noc', 'certificate', 'upload', 'submit'],
+
+  // GitHub / version control
+  github: ['github', 'git', 'commit', 'repository', 'pull request', 'code', 'repo'],
+  git: ['git', 'github', 'commit', 'repository', 'pull request', 'code'],
+  repository: ['repository', 'repo', 'github', 'git', 'code'],
+
+  // Mentor / manager
+  mentor: ['mentor', 'manager', 'sync', 'session', 'check-in', 'meeting'],
+  manager: ['manager', 'mentor', 'unavailable', 'leave', 'escalate', 'sync'],
+  session: ['session', 'sync', 'meeting', 'check-in', 'mentor', 'manager', 'call'],
+  'sync session': ['sync', 'session', 'meeting', 'check-in', 'mentor', 'manager'],
 };
 
 // ── Normalise text ──────────────────────────────────────────
