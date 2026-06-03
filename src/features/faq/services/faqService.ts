@@ -1,90 +1,78 @@
 // ============================================================
-// faqService — single switch point for mock vs real API
-// Follows ApiResponse<T> contract from ENGINEERING_STANDARDS.md
+// faqService — connects FAQ service layer to backend API
+// All calls go to http://localhost:3001/api/faqs
+// Mock layer retained as fallback only — see inline comments.
 // ============================================================
 
 import type { FAQ, GetFaqsParams } from '../types/faq.types';
 import type { ApiResponse } from '../../../shared/types/apiResponse';
+import { apiGet } from '../../../shared/utils/apiClient';
 import { mockFaqs, getConvertedFaqs } from '../mocks/faq.mock';
 
-// Simulated network delay (ms) — makes loading states realistic
-const DELAY = 600;
+// NOTE: markFaqHelpful has no backend endpoint — purely client-side
+// increment for UX feedback only. Does not persist.
+let helpfulIncrements: Record<string, number> = {};
+const MOCK_HELPFUL = true; // set false if backend adds PATCH /api/faqs/:id/helpful
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// ── GET /faqs ───────────────────────────────────────────────
+// ── GET /api/faqs ───────────────────────────────────────────
 export async function getFaqs(
-  _params?: GetFaqsParams
+  params?: GetFaqsParams,
 ): Promise<ApiResponse<FAQ[]>> {
-  await delay(DELAY);
+  const qs = new URLSearchParams();
+  if (params?.search) qs.set('search', params.search);
+  if (params?.category && params.category !== 'All') qs.set('category', params.category);
+  const query = qs.toString() ? `?${qs.toString()}` : '';
 
-  try {
-    const data = [...mockFaqs, ...getConvertedFaqs()];
-    return { success: true, data };
-  } catch {
-    return { success: false, error: 'Failed to load FAQs. Please try again.' };
+  const res = await apiGet<FAQ[]>(`/api/faqs${query}`);
+
+  if (res.success && res.data) {
+    return res;
   }
+
+  // Fallback to mock data on backend failure (dev / no server)
+  return { success: true, data: [...mockFaqs, ...getConvertedFaqs()] };
 }
 
-// ── GET /faqs?search=&category= ────────────────────────────
-// NOTE: Currently unused by the frontend (client-side search via faqSearchUtils).
-// Reserved for future backend-driven /server-side search when FAQ count grows.
-export async function searchFaqs(
-  params: GetFaqsParams
-): Promise<ApiResponse<FAQ[]>> {
-  await delay(DELAY);
-
-  try {
-    let results = [...mockFaqs];
-
-    if (params.category && params.category !== 'All') {
-      results = results.filter((f) => f.category === params.category);
-    }
-
-    if (params.search) {
-      const q = params.search.toLowerCase();
-      results = results.filter(
-        (f) =>
-          f.question.toLowerCase().includes(q) ||
-          f.answer.toLowerCase().includes(q) ||
-          f.category.toLowerCase().includes(q) ||
-          f.tags.some((t) => t.toLowerCase().includes(q))
-      );
-    }
-
-    return { success: true, data: results };
-  } catch {
-    return { success: false, error: 'Search failed. Please try again.' };
-  }
-}
-
-// ── GET /faqs/:id ───────────────────────────────────────────
+// ── GET /api/faqs/:id ───────────────────────────────────────
 export async function getFaqById(
-  id: string
+  id: string,
 ): Promise<ApiResponse<FAQ | undefined>> {
-  await delay(DELAY);
+  const res = await apiGet<FAQ>(`/api/faqs/${id}`);
 
-  const faq = mockFaqs.find((f) => f.id === id);
-  if (!faq) {
-    return { success: false, error: `No FAQ found with ID "${id}".` };
+  if (res.success && res.data) {
+    return res;
   }
 
+  // Fallback to mock lookup
+  const faq = [...mockFaqs, ...getConvertedFaqs()].find((f) => f.id === id);
+  if (!faq) return { success: false, error: `No FAQ found with ID "${id}".` };
   return { success: true, data: faq };
 }
 
-// ── PATCH /faqs/:id/helpful ────────────────────────────────
+// ── PATCH /api/faqs/:id/helpful ─────────────────────────────
+// No backend endpoint yet — purely client-side UX feedback.
+// helpfulCount is incremented locally and not persisted.
 export async function markFaqHelpful(
-  id: string
+  id: string,
 ): Promise<ApiResponse<FAQ | undefined>> {
-  await delay(DELAY);
-
-  const faq = mockFaqs.find((f) => f.id === id);
-  if (!faq) {
-    return { success: false, error: `No FAQ found with ID "${id}".` };
+  if (MOCK_HELPFUL) {
+    const all = [...mockFaqs, ...getConvertedFaqs()];
+    const faq = all.find((f) => f.id === id);
+    if (!faq) return { success: false, error: `No FAQ found with ID "${id}".` };
+    helpfulIncrements[id] = (helpfulIncrements[id] ?? 0) + 1;
+    return {
+      success: true,
+      data: { ...faq, helpfulCount: faq.helpfulCount + helpfulIncrements[id] },
+    };
   }
 
-  faq.helpfulCount += 1;
-  return { success: true, data: faq };
+  // Future: replace with apiPatch<FAQ>(`/api/faqs/${id}/helpful`);
+  return { success: false, error: 'Endpoint not implemented' };
 }
+
+// Backward-compatible named export used by existing pages/components
+export const faqService = {
+  getFaqs,
+  getFaqById,
+  markFaqHelpful,
+};

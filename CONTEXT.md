@@ -1054,7 +1054,7 @@ A feature is considered complete only if:
 
 Current phase:
 
-* Tier 1 feature implementation — feature/day-3-discussion-admin-polish
+* Frontend-backend API integration — `feature/frontend-api-integration`
 
 ## Completed
 
@@ -1097,52 +1097,63 @@ Current phase:
   * Root `/` redirects to `/queries/raise` (intern) or `/admin/queries` (admin)
 * Helpful button on FAQ answers — visible to interns, hidden for admins
 
-## Mock / Local Data (MVP)
+## Backend Integration Status
 
-All data during MVP phase is mock/local only. No backend integration yet.
+The backend Express TypeScript server is built and running.
 
-* `faq.mock.ts` — static seed FAQs (26 realistic Samagama/VINS FAQs, source: "existing") + session-scoped converted FAQs (source: "crowd-sourced")
-* `query.mock.ts` — static seed queries
-* `reply.mock.ts` — static seed replies + session-scoped new replies
-* `queryService`, `replyService`, `adminService`, `faqMockService` — mock service layers
+**What is connected:**
+* Frontend service layer → backend REST APIs (FAQ, Query, Reply, Admin)
+* Backend runs at `http://localhost:3001`
+* Backend data is **in-memory only** — not persisted to a database
+* Frontend retains mock fallback when backend is unavailable (dev-friendly, no crash)
+
+**Backend API coverage:**
+* `GET /api/faqs`, `GET /api/faqs/:id` — FAQ list and detail
+* `GET /api/queries`, `GET /api/queries/:id`, `POST /api/queries` — Query CRUD
+* `GET /api/users/:userId/queries` — per-user query list
+* `GET /api/queries/:queryId/replies`, `POST /api/queries/:queryId/replies` — Replies
+* `PATCH /api/admin/replies/:replyId/verify` — Admin: mark reply verified
+* `POST /api/admin/replies/:replyId/convert-to-faq` — Admin: convert verified reply to FAQ
+
+**What is NOT yet connected:**
+* `markFaqHelpful` — no backend endpoint exists; uses local mock increment only
+* Any query status transitions (open → answered → resolved → verified → closed)
 
 FAQ source rules:
-* `source: "existing"` — official/preloaded FAQs from `faq.mock.ts`
-* `source: "crowd-sourced"` — FAQs converted from verified replies at runtime
-
-No private links, credentials, mentor phone numbers, personal emails, or confidential data are stored.
-
-## Backend Integration Plan
-
-When a real backend is available, replace only the service and mock files:
-
-| Replace this | With this |
-|---|---|
-| `queryService.ts` | `GET /queries`, `GET /queries/:id`, `POST /queries` |
-| `replyService.ts` | `GET /queries/:id/replies`, `POST /queries/:id/replies` |
-| `adminService.ts` | `POST /admin/replies/:id/verify`, `POST /admin/replies/:id/convert` |
-| `faq.mock.ts` | `GET /faqs`, `GET /faqs/search?q=` |
-
-Pages and components (`QueryDiscussionPage`, `ReplyCard`, `AdminConvertToFaqDialog`, etc.) do **not** need changes — they consume `ApiResponse<T>` from services and remain UI-only.
-
-**Note:** Add-to-FAQ logic lives entirely in `adminService.convertReplyToFaq()`. The UI calls the service and renders the result. Backend integration replaces only the service body, not the call chain.
+* `source: "existing"` — official/preloaded FAQs from seed data
+* `source: "crowd-sourced"` — FAQs created via Admin Convert-to-FAQ
 
 ## Pending
 
-* real backend integration (service layer and mock files to be replaced only)
-* Zustand integration (when shared state is needed)
+* MongoDB / database integration (in-memory only for now)
+* Real authentication (JWT / session-based)
+* Real admin role enforcement (current MVP uses `x-role: admin` header guard)
+* `markFaqHelpful` backend endpoint
+* Query status transition endpoints
+
+## Service Layer Integration Map
+
+Service files call backend REST APIs. Mock fallback is retained as a last-resort dev fallback.
+
+| Service file | Backend endpoints called |
+|---|---|
+| `faqService.ts` | `GET /api/faqs`, `GET /api/faqs/:id` |
+| `queryService.ts` | `GET/POST /api/queries`, `GET /api/users/:userId/queries` |
+| `replyService.ts` | `GET/POST /api/queries/:queryId/replies` |
+| `adminService.ts` | `PATCH /api/admin/replies/:replyId/verify`, `POST /api/admin/replies/:replyId/convert-to-faq` |
+
+Pages and components consume `ApiResponse<T>` from services. They do not call APIs directly and do not need changes when backend is improved.
 
 ---
 
 # Known Assumptions
 
-* Existing FAQs will initially be added as mock/seed data
-* Backend may not exist initially
-* Mock service layer will be used first
+* Backend runs with in-memory data only — no database persistence yet
+* Admin guard uses `x-role: admin` header (MVP/demo auth substitute, not production-ready)
+* Real authentication is pending
 * Real-time updates are not part of MVP
 * Real AI is not part of MVP
 * Mobile-first responsiveness is required
-* Admin role is simulated via `roleSim.ts` during MVP (no backend auth)
 
 ---
 
@@ -1227,8 +1238,8 @@ Create the FAQ page UI only using the existing feature-based structure. Use stri
 
 Possible future improvements:
 
-* real backend integration
-* real authentication
+* real authentication (JWT / session-based)
+* MongoDB / database integration
 * real admin dashboard
 * notifications
 * real-time discussion updates

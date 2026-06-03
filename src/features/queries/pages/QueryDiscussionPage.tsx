@@ -5,7 +5,7 @@ import type { Reply } from '../types/reply.types';
 import type { AuthorRole } from '../types/reply.types';
 import { queryService } from '../services/queryService';
 import { replyService } from '../services/replyService';
-import { adminService } from '../../admin/services/adminService';
+import { adminService } from '../services/adminService';
 import { CURRENT_ROLE, isAdmin } from '../types/roleSim';
 import { QueryDetailCard } from '../components/QueryDetailCard';
 import { ReplyList } from '../components/ReplyList';
