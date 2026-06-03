@@ -1,0 +1,24 @@
+import { Router, type RequestHandler } from 'express';
+import { getFaqs, getFaqById, createFaq } from '../controllers/faqController.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+
+const router = Router();
+
+/**
+ * GET /api/faqs
+ * Query params: search?, category?
+ */
+router.get('/', asyncHandler(getFaqs as unknown as RequestHandler));
+
+/**
+ * GET /api/faqs/:id
+ */
+router.get('/:id', asyncHandler(getFaqById as unknown as RequestHandler));
+
+/**
+ * POST /api/faqs
+ * Body: { question, answer, category, tags? }
+ */
+router.post('/', asyncHandler(createFaq as unknown as RequestHandler));
+
+export default router;

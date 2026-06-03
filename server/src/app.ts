@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import healthRouter from './routes/health.routes.js';
+import faqRouter from './routes/faq.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 
@@ -14,6 +15,9 @@ app.use(cors());
 
 // Health check at /api/health
 app.use('/api/health', healthRouter);
+
+// FAQ routes at /api/faqs
+app.use('/api/faqs', faqRouter);
 
 // Catch unknown routes — must be registered after all real routes
 app.use(notFoundHandler);
