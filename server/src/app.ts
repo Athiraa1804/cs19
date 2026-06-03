@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import healthRouter from './routes/health.routes.js';
 import faqRouter from './routes/faq.routes.js';
+import queryRouter from './routes/query.routes.js';
+import userRouter from './routes/user.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 
@@ -18,6 +20,12 @@ app.use('/api/health', healthRouter);
 
 // FAQ routes at /api/faqs
 app.use('/api/faqs', faqRouter);
+
+// Query routes at /api/queries
+app.use('/api/queries', queryRouter);
+
+// User-scoped query route at /api/users/:userId/queries
+app.use('/api/users', userRouter);
 
 // Catch unknown routes — must be registered after all real routes
 app.use(notFoundHandler);
