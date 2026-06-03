@@ -5,6 +5,7 @@ import faqRouter from './routes/faq.routes.js';
 import queryRouter from './routes/query.routes.js';
 import userRouter from './routes/user.routes.js';
 import replyRouter from './routes/reply.routes.js';
+import adminRouter from './routes/admin.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 
@@ -31,6 +32,9 @@ app.use('/api/users', userRouter);
 // Reply routes at /api/queries/:queryId/replies
 // Mounted before queryRouter so /:queryId/replies matches before /:id
 app.use('/api/queries', replyRouter);
+
+// Admin routes at /api/admin (protected by adminGuard middleware)
+app.use('/api/admin', adminRouter);
 
 // Catch unknown routes — must be registered after all real routes
 app.use(notFoundHandler);

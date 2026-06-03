@@ -29,3 +29,8 @@ export function validateCreateReplyInput(input: Partial<{ body: string; authorNa
 export function isValidQueryId(id: unknown): id is string {
   return typeof id === 'string' && id.trim().length > 0;
 }
+
+/** Returns true when replyId looks valid. */
+export function isValidReplyId(id: unknown): id is string {
+  return typeof id === 'string' && id.trim().length > 0;
+}
