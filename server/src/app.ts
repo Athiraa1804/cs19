@@ -4,6 +4,7 @@ import healthRouter from './routes/health.routes.js';
 import faqRouter from './routes/faq.routes.js';
 import queryRouter from './routes/query.routes.js';
 import userRouter from './routes/user.routes.js';
+import replyRouter from './routes/reply.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 
@@ -26,6 +27,10 @@ app.use('/api/queries', queryRouter);
 
 // User-scoped query route at /api/users/:userId/queries
 app.use('/api/users', userRouter);
+
+// Reply routes at /api/queries/:queryId/replies
+// Mounted before queryRouter so /:queryId/replies matches before /:id
+app.use('/api/queries', replyRouter);
 
 // Catch unknown routes — must be registered after all real routes
 app.use(notFoundHandler);
