@@ -179,64 +179,111 @@ There are **9 team members**. Assign one section below to each person. Everyone 
 | `/queries/:id` | Query Discussion | Both | Replies, reply form, admin actions |
 | `/admin/queries` | Query Review | Admin only | All queries grouped by status |
 
-### What to Check on Each Page
+### FAQ Page — Testing Checklist with Expected Results
 
-**FAQ Page (`/faqs`)**
-- [ ] Search bar filters FAQs as you type (fuzzy/typo-tolerant)
-- [ ] Category filter buttons narrow results
-- [ ] FAQ accordion expands/collapses on click
-- [ ] "Was this helpful?" button is visible (interns only)
-- [ ] Source label shows "existing" or "crowd-sourced"
-- [ ] Empty state appears when no results match
-- [ ] Loading spinner appears while FAQs load
-- [ ] Error state with retry button appears on failure
-- [ ] Long question/answer text wraps correctly on mobile
+| # | Test This | Expected Result |
+|---|---|---|
+| 1 | Load `/faqs` fresh (no cache) | Loading spinner appears first, then FAQ list loads |
+| 2 | Search for "stitpend" (typo) | Matching stipend FAQs appear — search is typo-tolerant |
+| 3 | Search for "work from home" (phrase) | Remote/online internship FAQs appear |
+| 4 | Click a category filter chip | Only FAQs in that category are shown |
+| 5 | Click an FAQ accordion item | It expands to show the answer; other items stay closed |
+| 6 | Collapse the open accordion item | It closes cleanly with no visual glitch |
+| 7 | Click "Was this helpful?" (intern role) | Button state changes or a thank-you response appears |
+| 8 | Search for something with no match (e.g. "xyzabc") | Empty state appears: "No FAQs found" or similar friendly message |
+| 9 | Refresh the page while backend is running | FAQs reload correctly from the API |
+| 10 | Long FAQ text: find the longest question and answer | Text wraps, nothing is cut off, no horizontal scroll |
 
-**Raise Query Page (`/queries/raise`)**
-- [ ] Form validation: empty title/description/category shows inline errors
-- [ ] Submitting the form shows a loading state (prevents double-click)
-- [ ] After submit, the duplicate-check stage appears with suggestions
-- [ ] **Duplicate detection test:** type a title keyword like "stipend", "leave", "certificate", "remote", or "work from home" and submit — similar existing FAQs or queries should appear before the final submit. **Screenshot the suggestion screen.**
-- [ ] "Yes, Submit Query" creates the query successfully
-- [ ] Success screen shows then redirects to My Questions
-- [ ] Error screen shows if submission fails, with retry option
-- [ ] Cancel returns to the form
+**Screenshot to submit for FAQ Page:** the search results or accordion open state showing FAQ content and source label.
 
-**My Questions Page (`/queries/my`)**
-- [ ] Lists only queries created by the current intern
-- [ ] Query cards show title, status badge, timestamp, reply count
-- [ ] Clicking a card navigates to the Query Discussion page
-- [ ] "+ New Query" link works
-- [ ] Empty state with a CTA shows when no queries exist
-- [ ] Loading spinner shows while fetching
+**Role needed:** intern or admin (both can see FAQ page)
 
-**Query Discussion Page (`/queries/:id`)**
-- [ ] Shows the query title, description, category, status
-- [ ] Shows all replies for this query
-- [ ] Reply form: name, role selector, text area, submit button
-- [ ] Submitting a reply adds it to the list without page reload
-- [ ] Submit error shows a visible error banner
-- [ ] **Admin only — Verify reply:**
-  1. Switch role to `admin` in `roleSim.ts` (see Section 3)
-  2. Reload the discussion page
-  3. Find a reply and click the **Verify** button
-  4. Confirm a **verified badge** appears on the reply
-  5. Confirm the verified reply **moves to the top** of the reply list
-- [ ] **Admin only — Convert to FAQ:**
-  1. With the same admin session, click the **+ FAQ** button on a verified reply
-  2. Confirm the Convert-to-FAQ dialog opens with question pre-filled from the reply
-  3. Submit the dialog
-  4. Confirm a success message appears
-  5. Go to **FAQ Page** (`/faqs`) and search for the new FAQ — it should appear with source label "crowd-sourced"
-- [ ] Back link navigates to My Questions
+**Mobile extra:** also confirm category chips scroll horizontally without breaking the layout.
 
-**Admin Query Review Page (`/admin/queries`)**
-- [ ] Only accessible when role is set to `admin`
-- [ ] Shows all queries from all interns (not just own queries)
-- [ ] Queries are grouped into: Needs Attention / In Progress / Resolved / Closed
-- [ ] Clicking a query card goes to its discussion page
-- [ ] Empty state shows when no queries exist
-- [ ] Loading spinner shows while fetching
+### Raise Query Page — Testing Checklist with Expected Results
+
+| # | Test This | Expected Result |
+|---|---|---|
+| 1 | Open `/queries/raise` | Form with Title, Description, Category, Tags fields loads |
+| 2 | Click Submit with all fields empty | Inline validation errors appear under each required field |
+| 3 | Fill only Title and Description, click Submit | Validation error on Category field |
+| 4 | Fill all required fields, click Submit | Loading spinner appears, button is disabled (double-click prevented) |
+| 5 | After submit: duplicate detection | A suggestion screen appears with similar existing FAQs or queries |
+| 6 | **Duplicate detection with keyword:** type "stipend" as the title and submit | Similar stipend-related FAQs appear before the final submit |
+| 7 | Screenshot the suggestion screen | Capture it — include it in your test report |
+| 8 | Click "Yes, Submit Query" | Success screen shows, then auto-redirects to My Questions |
+| 9 | Check My Questions for the new query | New query card appears with status "open" |
+| 10 | Click Cancel on the suggestion screen | Returns to the form, form data is preserved |
+| 11 | Stop backend, then try to submit the form | "Network error" message appears in a user-friendly way |
+| 12 | Restart backend, fill and submit form again | Everything works normally again |
+
+**Screenshot to submit for Raise Query:** the duplicate suggestion screen showing similar FAQs/queries.
+
+**Role needed:** intern only (admin is redirected away from this page)
+
+**Important:** All interns share the mock user ID `user_1`. If your new query doesn't appear in My Questions, it may be overwritten by another teammate. Coordinate with your team.
+
+### My Questions Page — Testing Checklist with Expected Results
+
+| # | Test This | Expected Result |
+|---|---|---|
+| 1 | Open `/queries/my` when you have no queries | Empty state with a message and a CTA ("Raise a new query" link) |
+| 2 | After raising a query in Section 5, refresh My Questions | New query card appears with your title and "open" status |
+| 3 | Check that the query card shows: title, status badge, timestamp, reply count | All four pieces of info are visible |
+| 4 | Click the query card | Navigates to the correct Query Discussion page for that query |
+| 5 | Click "+ New Query" link | Navigates to `/queries/raise` |
+| 6 | Stop backend, then open My Questions | Error state with retry button appears |
+| 7 | Restart backend, refresh My Questions | Page loads normally, query data is back |
+
+**Screenshots to submit for My Questions:** empty state (if no queries) OR query card with title and status badge visible.
+
+**Role needed:** intern only (admin is redirected away from this page)
+
+### Query Discussion Page — Testing Checklist with Expected Results
+
+| # | Test This | Expected Result |
+|---|---|---|
+| 1 | Open the discussion page for an existing query | Query card shows title, description, category, and status |
+| 2 | Check that existing replies are displayed | Replies appear in chronological order |
+| 3 | Check the reply form | Fields: Name, Role selector, Message textarea, Submit button |
+| 4 | Post a reply: fill form and click Submit | Reply appears in the list immediately without page reload |
+| 5 | Post a reply with backend stopped | Error banner appears: "Network error" or similar user-friendly message |
+| 6 | Restart backend, post another reply | Reply posts successfully |
+
+#### Admin Actions (switch role to `admin` in `roleSim.ts` first)
+
+| # | Test This | Expected Result |
+|---|---|---|
+| 7 | With admin role: find a reply and click **Verify** | Verified badge (✓ or "Verified") appears on that reply |
+| 8 | Check the verified reply's position | It moves to the **top** of the reply list |
+| 9 | On the verified reply: click **+ FAQ** button | Convert-to-FAQ dialog opens with question field pre-filled from the reply |
+| 10 | Edit the question if needed and submit | Success message appears; dialog closes |
+| 11 | Go to `/faqs` and search for the new FAQ | It appears with source label **"crowd-sourced"** |
+| 12 | Screenshot the new FAQ on the FAQ page | Include in your report as proof of convert-to-FAQ working |
+
+**Screenshots to submit for Query Discussion:**
+- Reply form and posted replies (intern role)
+- Verified badge + top placement (admin role)
+- Convert-to-FAQ dialog (admin role)
+- New FAQ on `/faqs` with "crowd-sourced" label (admin role)
+
+**Back link:** Clicking the back link on the discussion page should navigate to My Questions.
+
+### Admin Query Review Page — Testing Checklist with Expected Results
+
+| # | Test This | Expected Result |
+|---|---|---|
+| 1 | With role = `intern`, navigate to `/admin/queries` | You are redirected to `/faqs` — admin page is not accessible |
+| 2 | Switch role to `admin`, navigate to `/admin/queries` | Page loads showing all queries from all interns |
+| 3 | Check that queries are grouped | Groups visible: "Needs Attention", "In Progress", "Resolved", "Closed" |
+| 4 | Click a query card | Navigates to that query's discussion page |
+| 5 | With no queries in the system: check empty state | Empty state appears with a friendly message |
+| 6 | Stop backend, open Admin Query Review | Error state with retry button appears |
+| 7 | Restart backend, refresh | Page loads normally |
+
+**Screenshot to submit for Admin Query Review:** the grouped query list (or empty state if no data).
+
+**Role needed:** admin only
 
 ---
 
@@ -326,7 +373,117 @@ To test how the backend responds to bad requests:
 
 ---
 
-## 7. Mobile Testing Checklist
+## 6. Screenshot Proof Format
+
+Screenshots are your evidence. Without them, bugs are hard to verify. Follow this format for every screenshot you submit.
+
+### Screenshot Rules
+- Label each screenshot with: **Page name | Role | What it shows**
+- Screenshots must be clear enough to read text
+- Include the browser address bar or DevTools to show the URL
+- For error states: include the visible error message in the screenshot
+
+### Required Screenshots by Page
+
+| Page | What to screenshot |
+|---|---|
+| FAQ Page | Search results or accordion open showing answer + source label |
+| Raise Query | Duplicate suggestion screen (mandatory — this is the key proof) |
+| My Questions | Query card with title and status badge, OR empty state |
+| Query Discussion | Posted reply in list, OR verified badge (admin), OR convert-to-FAQ dialog (admin) |
+| Admin Query Review | Grouped query list |
+| Error state | The error message/empty state itself (stop backend to trigger) |
+| New FAQ (crowd-sourced) | The FAQ page showing the new FAQ with "crowd-sourced" label |
+
+### Screenshot Naming Convention
+
+```
+[Page]-[Role]-[WhatItShows].png
+```
+
+**Examples:**
+```
+FAQ-Intern-SearchResults-Stipend.png
+RaiseQuery-Intern-DuplicateSuggestions-Stipend.png
+QueryDiscussion-Admin-VerifiedBadge-TopPlacement.png
+FAQ-Admin-CrowdSourced-NewFAQ.png
+```
+
+### How to Label in Your Report
+
+If you can't rename files, describe them in the report text:
+
+```
+**Screenshot 1:** FAQ Page | intern | Search results for "stipend" — 3 matching FAQs shown
+**Screenshot 2:** Raise Query | intern | Duplicate suggestion screen showing 2 similar FAQs
+**Screenshot 3:** Query Discussion | admin | Verified badge on reply + reply moved to top
+```
+
+---
+
+## 7. Role-Based Testing — What to Test as Intern vs Admin
+
+This section clarifies exactly what each role can and should test.
+
+### As an Intern — Test These Flows
+
+**FAQ Page (`/faqs`)**
+- Browse and search FAQs
+- Filter by category
+- Open/close FAQ accordions
+- Click "Was this helpful?" button
+- Observe source labels
+
+**Raise Query (`/queries/raise`)**
+- Fill and submit the query form
+- See duplicate suggestions after submission
+- Confirm your query appears in My Questions
+
+**My Questions (`/queries/my`)**
+- See your own queries only
+- Click a query to open its discussion page
+- Post replies to your own queries
+
+**Query Discussion (`/queries/:id`)**
+- Read replies from admins and other interns
+- Post a reply (your name and role appear on the reply)
+- Verify that you do **NOT** see a Verify button or + FAQ button
+
+### As an Admin — Test These Flows
+
+**FAQ Page (`/faqs`)**
+- Browse and search FAQs (same as intern)
+- Confirm "Was this helpful?" button is **hidden** (not shown for admins)
+
+**Query Review (`/admin/queries`)**
+- View all queries from all interns
+- Click any query to go to its discussion page
+
+**Query Discussion (`/queries/:id`)**
+- Read all replies
+- Post a reply (your authorRole will be "admin")
+- **Verify** a reply — see badge + top placement
+- **Convert to FAQ** a verified reply — see new FAQ appear in `/faqs`
+
+**What admins CANNOT do:**
+- Cannot access `/queries/raise` (redirected to `/admin/queries`)
+- Cannot access `/queries/my` (redirected to `/admin/queries`)
+
+### How to Report Role Testing
+
+In every submission, include:
+
+```
+**Role tested:** intern
+**Pages tested:** FAQ Page, Raise Query, My Questions, Query Discussion
+
+**Role tested:** admin
+**Pages tested:** FAQ Page, Query Review, Query Discussion
+```
+
+---
+
+## 8. Mobile Testing Checklist
 
 Apply this checklist to **every page**. Test on a real phone or browser DevTools mobile viewport (e.g., 375px wide).
 
@@ -383,7 +540,7 @@ Look at the `category` field of each object in the JSON.
 
 ---
 
-## 8. Bug Report Format
+## 9. Bug Report Format
 
 When you find a bug, report it like this:
 
@@ -417,7 +574,7 @@ When you find a bug, report it like this:
 
 ---
 
-## 9. Git Branch Rules for Teammates
+## 10. Git Branch Rules for Teammates
 
 These rules keep the codebase stable and reviewable.
 
@@ -479,7 +636,7 @@ cd server && npm run build   # backend builds without errors
 
 ---
 
-## 10. Known MVP Limitations
+## 11. Known MVP Limitations
 
 These are **known gaps** — do not file bugs for them. They are tracked for future development.
 
@@ -614,6 +771,70 @@ SUBMISSION CHECKLIST
 □ All Quick Test items above are ticked off
 □ Role tested as: [ intern / admin / both ]
 □ Browser and device: [ e.g. Chrome desktop, Chrome DevTools mobile ]
-□ If any bugs found: Bug Report filed (Section 8 format)
+□ If any bugs found: Bug Report filed (Section 9 format)
 □ If no bugs found: "No bugs found in this session" written in report
 ```
+
+---
+
+## 12. Teammate Sign-Off Checklist
+
+Complete this section and include it in every test report you submit.
+
+```
+─────────────────────────────────────────────────────
+TEAMMATE SIGN-OFF
+─────────────────────────────────────────────────────
+Name:         _____________________________
+Date:         _____________________________
+Branch used:  test/fullstack-mvp-testing
+
+ROLE TESTED THIS SESSION: [ intern / admin / both ]
+
+PAGES TESTED:
+  □ FAQ Page (/faqs)
+  □ Raise Query (/queries/raise)
+  □ My Questions (/queries/my)
+  □ Query Discussion (/queries/:id)
+  □ Admin Query Review (/admin/queries)  ← admin only
+
+MOBILE TESTED: [ Yes / No ]
+  If Yes, device/viewport: ____________________
+
+BACKEND ERROR STATES TESTED: [ Yes / No ]
+  (Stopped backend to test error UI on pages)
+
+SCREENSHOTS SUBMITTED: [ number ] of required screenshots
+
+MINIMUM SCREENSHOTS CHECK:
+  □ FAQ page screenshot included
+  □ Raise Query duplicate suggestion screenshot included
+  □ Query Discussion screenshot included
+  □ Admin-only screenshot(s) if admin role tested
+  □ Error state screenshot if backend-stop test done
+
+BUGS FOUND THIS SESSION: [ number ]
+  If any: Bug Report(s) filed using Section 9 format
+  If zero: "No bugs found in this session" stated in report
+
+QUICK TEST CHECKLIST: [ all items ticked / some items skipped ]
+  Skipped items (if any): _____________________
+
+ROLE-SWITCH TESTED:
+  □ Switched role from intern to admin and retested relevant pages
+
+SHARED-USER NOTE:
+  □ Confirmed which role/mock-user context I tested under
+  □ Coordinated with teammates if testing My Questions / Raise Query
+
+I confirm:
+  - I tested on test/fullstack-mvp-testing branch
+  - I did not modify any app code
+  - All screenshots are labelled with page name and role
+  - All items above are completed honestly
+
+Signed: _____________________________ Date: __________
+─────────────────────────────────────────────────────
+```
+
+> Copy this sign-off block into your test report. Fill it in, sign it, and submit alongside your screenshots. This makes it easy for the team lead to track who tested what and whether coverage was complete.
