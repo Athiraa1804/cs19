@@ -6,6 +6,94 @@
 
 ---
 
+## 0. What Teammates Must Submit
+
+After each testing session, every teammate must submit:
+
+1. **Screenshots** — minimum 1 per assigned page showing the happy-path working correctly
+2. **Completed checklist** — copy the Quick Test Checklist at the end of this doc, tick every item
+3. **Bug reports** — if you found any bugs, fill in the Bug Report format in Section 8
+4. **No-bugs report** — if you found nothing broken, write clearly: "No bugs found in this session"
+
+Your submission must also include:
+- **Pages tested** — which pages did you cover
+- **Role tested as** — intern or admin (or both)
+- **Browser and device** — e.g., Chrome desktop, Chrome DevTools mobile (375px), or real phone
+
+> **Where to submit:** Share in your team's agreed channel (group chat, docs, or PR description).
+> If testing reveals a bug, also file it using the Bug Report format in Section 8.
+
+---
+
+## 0b. Before You Start
+
+Run through this checklist before testing anything:
+
+- [ ] Confirm you are on the correct branch: `test/fullstack-mvp-testing`
+  - Run: `git branch --show-current` — must print `test/fullstack-mvp-testing`
+  - If you are on a different branch: `git checkout test/fullstack-mvp-testing`
+- [ ] Do not edit any files outside of `TEAM_TESTING_GUIDE.md` or your own test notes
+- [ ] Run the backend server (see Section 1 below) if your assigned pages need it
+- [ ] Run the frontend dev server (see Section 2 below)
+- [ ] Check both servers started without errors in your terminal
+- [ ] Open `http://localhost:5173` in your browser and confirm the app loads
+- [ ] Confirm no red errors in DevTools Console (press F12 → Console tab) on the homepage
+
+**Important — shared test data:**
+All interns share the same mock user ID (`user_1`) in the MVP. If multiple teammates test "My Questions" at the same time, queries may overlap or overwrite each other. **Coordinate:** test user-specific flows (My Questions, Raise Query) one person at a time, or test different things first. Always report which role and approximate context you tested under.
+
+---
+
+## 0c. DevTools Basics for Beginners
+
+DevTools is a browser tool that helps you see what's happening behind the scenes.
+
+### How to open it
+- Press **F12** on your keyboard, OR
+- Right-click anywhere on the page → select **Inspect**
+
+A panel will open at the bottom or right of your browser.
+
+### Check the Console tab (for errors)
+- Click the **Console** tab at the top of DevTools
+- Look for anything in **red** — those are JavaScript errors
+- If you see red errors when something breaks, screenshot them
+- A clean console looks like this: `[system] ✓` or shows no red text
+
+### Check the Network tab (for failed API calls)
+- Click the **Network** tab at the top of DevTools
+- Reload the page (F5) to see all network requests appear
+- Find an API call (e.g. `/api/faqs`) and look at its **Status** column:
+  - **200** = success — the API call worked
+  - **400** = bad request — something wrong with the data you sent
+  - **401 / 403** = unauthorised — admin-only endpoint was called without the right header
+  - **404** = not found — wrong URL
+  - **500** = server error — the backend crashed or has a bug
+  - Anything **red** means something failed
+
+> If the app shows a generic "Network error" message, check the Network tab to see if the backend is down or returning an error status.
+
+---
+
+## 0d. How to Trigger Error States
+
+Error states let you confirm the app handles failures gracefully. Here's how to trigger them:
+
+1. **Keep the backend running** for all normal tests
+2. **To test error handling: stop the backend** — go to the terminal running `npm run dev` inside `/server` and press **Ctrl+C**
+3. Now try these actions while the backend is stopped:
+   - Refresh the FAQ page — should show an **error state** with a retry button
+   - Refresh My Questions — should show an **error state** with a retry button
+   - Go to Raise Query and submit the form — should show a **"Network error"** message
+   - Open Query Discussion — should show an **error state**
+4. Confirm the error message is **user-friendly** (not a blank screen or raw code)
+5. **Restart the backend** after testing: `npm run dev` in the `/server` folder
+6. Refresh the page and confirm everything works again
+
+> **Important:** Always restart the backend after testing error states. Other teammates need it running.
+
+---
+
 ## 1. How to Run the Backend
 
 The backend is a Node.js/Express API server with in-memory data storage (no database).
@@ -108,6 +196,7 @@ There are **9 team members**. Assign one section below to each person. Everyone 
 - [ ] Form validation: empty title/description/category shows inline errors
 - [ ] Submitting the form shows a loading state (prevents double-click)
 - [ ] After submit, the duplicate-check stage appears with suggestions
+- [ ] **Duplicate detection test:** type a title keyword like "stipend", "leave", "certificate", "remote", or "work from home" and submit — similar existing FAQs or queries should appear before the final submit. **Screenshot the suggestion screen.**
 - [ ] "Yes, Submit Query" creates the query successfully
 - [ ] Success screen shows then redirects to My Questions
 - [ ] Error screen shows if submission fails, with retry option
@@ -124,13 +213,21 @@ There are **9 team members**. Assign one section below to each person. Everyone 
 **Query Discussion Page (`/queries/:id`)**
 - [ ] Shows the query title, description, category, status
 - [ ] Shows all replies for this query
-- [ ] Verified reply has a visible badge and floats to the top
 - [ ] Reply form: name, role selector, text area, submit button
 - [ ] Submitting a reply adds it to the list without page reload
 - [ ] Submit error shows a visible error banner
-- [ ] **Admin only:** Verify button marks a reply as verified
-- [ ] **Admin only:** "+ FAQ" button opens the Convert-to-FAQ dialog
-- [ ] **Admin only:** Confirming Convert-to-FAQ shows a success message
+- [ ] **Admin only — Verify reply:**
+  1. Switch role to `admin` in `roleSim.ts` (see Section 3)
+  2. Reload the discussion page
+  3. Find a reply and click the **Verify** button
+  4. Confirm a **verified badge** appears on the reply
+  5. Confirm the verified reply **moves to the top** of the reply list
+- [ ] **Admin only — Convert to FAQ:**
+  1. With the same admin session, click the **+ FAQ** button on a verified reply
+  2. Confirm the Convert-to-FAQ dialog opens with question pre-filled from the reply
+  3. Submit the dialog
+  4. Confirm a success message appears
+  5. Go to **FAQ Page** (`/faqs`) and search for the new FAQ — it should appear with source label "crowd-sourced"
 - [ ] Back link navigates to My Questions
 
 **Admin Query Review Page (`/admin/queries`)**
@@ -143,7 +240,9 @@ There are **9 team members**. Assign one section below to each person. Everyone 
 
 ---
 
-## 6. Backend Endpoints to Test
+## 6. Backend Endpoints to Test (Advanced — API Testers Only)
+
+> **Note for UI testers:** If you are only testing the app by clicking through pages in your browser, you can **skip this section entirely**. Focus on Section 5 (Frontend Routes and Pages) instead. Only use this section if you are specifically testing the backend API with Postman, Thunder Client, or a similar tool.
 
 All endpoints are at `http://localhost:3001/api/`.
 
@@ -184,6 +283,17 @@ All endpoints are at `http://localhost:3001/api/`.
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/health` | Returns `{ status: "ok" }` if server is up |
+
+### Testing Error States via API
+
+To test how the backend responds to bad requests:
+
+| Scenario | What to do | Expected result |
+|---|---|---|
+| Invalid FAQ ID | `GET /api/faqs/invalid-id` | `404` — "FAQ not found" |
+| Invalid query ID | `GET /api/queries/invalid-id` | `404` — "Query not found" |
+| Missing required fields | `POST /api/queries` with empty body | `400` — validation error |
+| Missing admin header | `PATCH /api/admin/replies/abc/verify` without `x-role: admin` | `403` — forbidden |
 
 ### Minimal Valid Request Bodies
 
@@ -243,6 +353,33 @@ Apply this checklist to **every page**. Test on a real phone or browser DevTools
 - [ ] Reply form is usable without keyboard cutting off inputs
 - [ ] Reply cards are readable
 - [ ] Admin action buttons are accessible and labelled clearly
+
+---
+
+## 7. FAQ Categories
+
+The FAQ page has category filter chips. The current categories in the preloaded FAQ data are:
+
+| Category | What it covers |
+|---|---|
+| **Samagama Portal** | login, profile, CV upload, offer acceptance |
+| **Documentation** | NOC, certificates |
+| **Internship Mode** | online vs offline, switching modes |
+| **Equipment** | laptop requirements |
+| **Mentor Sessions** | sync sessions, manager availability |
+| **Projects** | GitHub submission, project assignment |
+| **Duration** | internship length, cohort start dates |
+| **Stipend & Benefits** | stipend payment, leave, taxes |
+| **Certificate** | completion certificate, experience letter |
+| **Support** | raising queries, escalation |
+
+When testing the category filter, try filtering by a few of these categories and confirm only matching FAQs are shown. In your test report, mention which categories you filtered by.
+
+To see all categories programmatically, open your browser and visit:
+```
+http://localhost:3001/api/faqs
+```
+Look at the `category` field of each object in the JSON.
 
 ---
 
@@ -361,50 +498,122 @@ These are **known gaps** — do not file bugs for them. They are tracked for fut
 
 ---
 
-## Quick Test Checklist for QA
+## 11. Quick Test Checklist for QA
 
-Copy this and tick off as you test.
+Copy this into your test report. Tick every item you checked. If an item fails, file a bug using the format in Section 8.
 
 ```
-□ Backend is running at localhost:3001
-□ Frontend is running at localhost:5173
-□ Role is set to: [ intern / admin ]
+BEFORE STARTING
+□ git branch shows: test/fullstack-mvp-testing
+□ Frontend running at localhost:5173
+□ Backend running at localhost:3001 (if testing pages that use it)
+□ No red errors in DevTools Console (F12 → Console tab)
+□ Browser confirms app loads at localhost:5173
 
+ROLE: [ intern / admin ] — switch in roleSim.ts if needed
+
+──────────────────────────────────────────
 FAQ PAGE (/faqs)
-□ Search works with typos (e.g. "stitpend")
-□ Category filter narrows results
-□ FAQ accordion expands and collapses
-□ Loading spinner shows on fresh load
-□ Empty state shows for no-match search
-□ Error state shows if API fails (stop backend to test)
+──────────────────────────────────────────
+□ Search works with typos (e.g. "stitpend" matches "stipend")
+□ Search with full phrase works (e.g. "work from home")
+□ Category filter narrows results (try 2–3 different categories)
+□ FAQ accordion expands and collapses smoothly
+□ "Was this helpful?" button visible (only if role = intern)
+□ Source label shows "existing" on preloaded FAQs
+□ Empty state appears when search has no matches
+□ Loading spinner shows on first load
+□ Long FAQ question and answer text wrap correctly on mobile
+□ No horizontal scroll on mobile (375px wide)
 
-RAISE QUERY (/queries/raise)
-□ Empty form submit shows validation errors
-□ Form submits and shows duplicate suggestions
-□ "Yes, Submit Query" works
-□ Success screen appears then redirects
+──────────────────────────────────────────
+RAISE QUERY (/queries/raise) — intern role required
+──────────────────────────────────────────
+□ Empty form submit shows validation errors on all required fields
+□ Submit button shows loading state and prevents double-click
+□ Duplicate detection: type keyword like "stipend" or "leave" → submit
+  → Suggestion screen appears with similar FAQs or queries
+  → Screenshot taken of suggestion screen
+□ "Yes, Submit Query" creates the query
+□ Success screen appears and auto-redirects to My Questions
+□ Error screen appears if submission fails (or test with backend stopped)
+□ Cancel returns to form
 
-MY QUESTIONS (/queries/my)
-□ Shows only this user's queries
-□ Empty state shows when no queries exist
-□ Clicking card opens discussion page
+──────────────────────────────────────────
+MY QUESTIONS (/queries/my) — intern role required
+──────────────────────────────────────────
+□ Shows only the current user's own queries
+□ Empty state appears when no queries exist
+□ Query card shows title, status badge, timestamp, reply count
+□ Clicking a card opens the Query Discussion page
+□ "+ New Query" link works
+□ Loading spinner shows while fetching
 
+──────────────────────────────────────────
 QUERY DISCUSSION (/queries/:id)
+──────────────────────────────────────────
+□ Query detail card shows title, description, category, status
 □ Replies load and display correctly
-□ Posting a reply works
-□ Reply error banner shows on failure
-□ [Admin] Verify button marks reply verified
-□ [Admin] + FAQ button opens dialog
-□ [Admin] Convert-to-FAQ creates a new FAQ
+□ Reply form: name, role selector, text area, submit button all present
+□ Posting a reply adds it to the list without page reload
+□ Reply submit error shows a visible error banner (or test with backend stopped)
+□ BACKEND ERROR TEST: stop backend → try to post a reply → error banner appears
 
-ADMIN QUERY REVIEW (/admin/queries)
-□ [Admin] Shows all queries from all users
-□ [Admin] Grouped into Needs Attention / In Progress / Closed
-□ [Intern] Redirected to /faqs if visiting this page
+Admin actions (role must be admin — switch in roleSim.ts):
+□ [Admin] "Verify" button visible on at least one reply
+□ [Admin] Clicking Verify adds a verified badge to the reply
+□ [Admin] Verified reply moves to the top of the reply list
+□ [Admin] "+ FAQ" button appears on verified replies
+□ [Admin] + FAQ dialog opens with question pre-filled
+□ [Admin] Submitting dialog shows a success message
+□ [Admin] New FAQ appears in FAQ page with source "crowd-sourced" — confirm by visiting /faqs
 
-MOBILE (test at 375px wide)
-□ No horizontal scroll
-□ All text wraps correctly
-□ Buttons are tappable
-□ Forms are usable
+──────────────────────────────────────────
+ADMIN QUERY REVIEW (/admin/queries) — admin role required
+──────────────────────────────────────────
+□ Only accessible when role = admin (intern is redirected to /faqs)
+□ Shows ALL queries from ALL interns, not just own queries
+□ Queries grouped under: Needs Attention / In Progress / Resolved / Closed
+□ Clicking a query card opens its discussion page
+□ Empty state shows when there are no queries
+□ Loading spinner shows while fetching
+
+──────────────────────────────────────────
+BACKEND ERROR STATE TESTING
+──────────────────────────────────────────
+□ Stop backend: Ctrl+C in the terminal running npm run dev in /server
+□ Refresh FAQ page → error state with retry button appears
+□ Refresh My Questions → error state with retry button appears
+□ Open Query Discussion → error state appears
+□ Try to submit Raise Query form → "Network error" message appears
+□ Restart backend: npm run dev in /server
+□ Refresh pages — everything should work normally again
+□ Mention in your report: "Error states tested by stopping backend"
+
+──────────────────────────────────────────
+MOBILE TESTING (375px wide — use DevTools device toolbar)
+──────────────────────────────────────────
+□ No horizontal scroll on any page
+□ All text wraps correctly, nothing is cut off
+□ Buttons are large enough to tap (44×44px minimum)
+□ Nav bar does not overflow or wrap incorrectly
+□ FAQ accordion stays readable when expanded
+□ Form fields are full-width and easy to tap
+□ Reply form keyboard does not cover the text area
+□ Admin action buttons (Verify, + FAQ) are labelled clearly and tappable
+
+──────────────────────────────────────────
+SUBMISSION CHECKLIST
+──────────────────────────────────────────
+□ Screenshots attached — minimum 1 per tested page
+□ Screenshots labelled with page name and role
+□ Screenshot of duplicate suggestion screen (Raise Query test)
+□ Screenshot of verified reply badge and top placement (if tested as admin)
+□ Screenshot of new FAQ with "crowd-sourced" label (if tested convert-to-FAQ)
+□ Screenshot of error state (if tested backend-stopped scenario)
+□ All Quick Test items above are ticked off
+□ Role tested as: [ intern / admin / both ]
+□ Browser and device: [ e.g. Chrome desktop, Chrome DevTools mobile ]
+□ If any bugs found: Bug Report filed (Section 8 format)
+□ If no bugs found: "No bugs found in this session" written in report
 ```
