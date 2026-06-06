@@ -1,69 +1,57 @@
-/**
- * FAQ Repository — in-memory data access layer.
- * Acts as the single source of truth for FAQ read/write operations.
- * In future this will be replaced by a real database calls.
- */
 import type { FAQ, GetFaqsQuery, CreateFaqInput } from '../types/faq.js';
-import { seedFaqs } from '../data/faq.data.js';
+import { FaqModel } from '../models/Faq.js';
+import { mapFaq } from './mappers.js';
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function searchRegex(value: string): RegExp {
+  return new RegExp(escapeRegex(value), 'i');
+}
 
 class FaqRepository {
-  /** All FAQs (seed + runtime-added crowd-sourced). Mutable array. */
-  private faqs: FAQ[] = [...seedFaqs];
-
   /** Returns all FAQs, optionally filtered by search text and/or category. */
-  findAll(query: GetFaqsQuery = {}): FAQ[] {
-    let results = this.faqs;
-
-    if (query.category && query.category.trim().length > 0) {
-      results = results.filter(
-        (f) => f.category.toLowerCase() === query.category!.toLowerCase(),
-      );
+  async findAll(query: GetFaqsQuery = {}): Promise<FAQ[]> {
+    const filter: Record<string, unknown> = {};
+    if (query.category) filter.category = new RegExp(`^${escapeRegex(query.category)}$`, 'i');
+    if (query.search) {
+      const regex = searchRegex(query.search);
+      filter.$or = [{ question: regex }, { answer: regex }, { category: regex }, { tags: regex }];
     }
 
-    if (query.search && query.search.trim().length > 0) {
-      const words = query.search
-        .toLowerCase()
-        .split(/\s+/)
-        .filter((w) => w.length > 1);
-
-      results = results
-        .map((faq) => {
-          const haystack = `${faq.question} ${faq.answer} ${faq.tags.join(' ')} ${faq.category}`.toLowerCase();
-          const score = words.filter((w) => haystack.includes(w)).length;
-          return { faq, score };
-        })
-        .filter((s) => s.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .map((s) => s.faq);
-    }
-
-    return results;
+    const faqs = await FaqModel.find(filter).sort({ helpfulCount: -1 });
+    return faqs.map((faq) => mapFaq(faq.toObject()));
   }
 
   /** Returns a single FAQ by id, or undefined if not found. */
-  findById(id: string): FAQ | undefined {
-    return this.faqs.find((f) => f.id === id);
+  async findById(id: string): Promise<FAQ | undefined> {
+    const faq = await FaqModel.findOne({ id });
+    return faq ? mapFaq(faq.toObject()) : undefined;
   }
 
   /**
    * Adds a new FAQ.
    * "existing" source = preloaded; "crowd-sourced" = admin/converted.
    */
-  create(input: CreateFaqInput, source: FAQ['source'] = 'crowd-sourced'): FAQ {
-    const now = new Date().toISOString();
-    const faq: FAQ = {
-      id: `faq-${Date.now()}`,
+  async create(input: CreateFaqInput, source: FAQ['source'] = 'crowd-sourced'): Promise<FAQ> {
+    const faq = await FaqModel.create({
       question: input.question.trim(),
       answer: input.answer.trim(),
       category: input.category.trim(),
       tags: input.tags ?? [],
-      helpfulCount: 0,
       source,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.faqs.push(faq);
-    return faq;
+    });
+    return mapFaq(faq.toObject());
+  }
+
+  async markHelpful(id: string): Promise<FAQ | undefined> {
+    const faq = await FaqModel.findOneAndUpdate(
+      { id },
+      { $inc: { helpfulCount: 1 } },
+      { new: true },
+    );
+    return faq ? mapFaq(faq.toObject()) : undefined;
   }
 }
 

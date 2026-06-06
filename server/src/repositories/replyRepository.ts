@@ -1,43 +1,57 @@
-/**
- * Reply Repository — in-memory data access layer.
- * In future this will be replaced by real database calls.
- */
 import type { Reply, CreateReplyInput } from '../types/reply.js';
-import { seedReplies } from '../data/reply.data.js';
+import { QueryModel } from '../models/Query.js';
+import { ReplyModel } from '../models/Reply.js';
+import { mapReply } from './mappers.js';
 
 class ReplyRepository {
-  /** All replies (seed + runtime-added). Mutable array. */
-  private replies: Reply[] = [...seedReplies];
-
   /**
    * Returns all replies for a given query, sorted oldest-first (chronological order).
    */
-  findByQueryId(queryId: string): Reply[] {
-    return this.replies
-      .filter((r) => r.queryId === queryId)
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  async findByQueryId(queryId: string): Promise<Reply[]> {
+    const replies = await ReplyModel.find({ queryId }).sort({ createdAt: 1 });
+    return replies.map((reply) => mapReply(reply.toObject()));
   }
 
   /**
    * Returns a single reply by id, or undefined if not found.
    */
-  findById(id: string): Reply | undefined {
-    return this.replies.find((r) => r.id === id);
+  async findById(id: string): Promise<Reply | undefined> {
+    const reply = await ReplyModel.findOne({ id });
+    return reply ? mapReply(reply.toObject()) : undefined;
   }
 
   /** Adds a new reply and returns it. */
-  create(input: CreateReplyInput & { queryId: string }): Reply {
-    const reply: Reply = {
-      id: `r-${Date.now()}`,
+  async create(input: CreateReplyInput & { queryId: string; authorId: string }): Promise<Reply> {
+    const reply = await ReplyModel.create({
       queryId: input.queryId,
+      authorId: input.authorId,
       body: input.body.trim(),
       authorName: input.authorName.trim(),
       authorRole: input.authorRole,
-      createdAt: new Date().toISOString(),
-      isVerified: false,
-    };
-    this.replies.push(reply);
-    return reply;
+    });
+    await QueryModel.findOneAndUpdate(
+      { id: input.queryId },
+      {
+        latestReplyPreview: input.body.trim().slice(0, 160),
+        ...(input.authorRole === 'admin' ? { status: 'answered' } : {}),
+      },
+    );
+    return mapReply(reply.toObject());
+  }
+
+  async update(reply: Reply): Promise<Reply> {
+    const updated = await ReplyModel.findOneAndUpdate(
+      { id: reply.id },
+      {
+        body: reply.body,
+        authorName: reply.authorName,
+        authorRole: reply.authorRole,
+        isVerified: reply.isVerified,
+      },
+      { new: true },
+    );
+    if (!updated) throw new Error(`Reply with id "${reply.id}" not found`);
+    return mapReply(updated.toObject());
   }
 }
 

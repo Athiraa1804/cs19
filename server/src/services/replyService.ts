@@ -5,14 +5,20 @@
 import type { Reply, CreateReplyInput } from '../types/reply.js';
 import type { ApiResponse } from '../types/apiResponse.js';
 import { replyRepository } from '../repositories/replyRepository.js';
+import { queryRepository } from '../repositories/queryRepository.js';
 import { validateCreateReplyInput } from '../utils/replyValidator.js';
 
 export const replyService = {
   /**
    * GET /api/queries/:queryId/replies — list replies for a query, oldest-first.
    */
-  getRepliesForQuery(queryId: string): ApiResponse<Reply[]> {
-    const replies = replyRepository.findByQueryId(queryId);
+  async getRepliesForQuery(queryId: string): Promise<ApiResponse<Reply[]>> {
+    const query = await queryRepository.findById(queryId);
+    if (!query) {
+      return { success: false, error: `Query with id "${queryId}" not found` };
+    }
+
+    const replies = await replyRepository.findByQueryId(queryId);
     return { success: true, data: replies };
   },
 
@@ -20,13 +26,18 @@ export const replyService = {
    * POST /api/queries/:queryId/replies — add a new reply.
    * Returns validation errors as 400.
    */
-  createReply(queryId: string, input: CreateReplyInput): ApiResponse<Reply> {
+  async createReply(queryId: string, input: CreateReplyInput & { authorId: string }): Promise<ApiResponse<Reply>> {
     const errors = validateCreateReplyInput(input);
     if (errors.length > 0) {
       return { success: false, error: errors.join('; ') };
     }
 
-    const reply = replyRepository.create({ ...input, queryId });
+    const query = await queryRepository.findById(queryId);
+    if (!query) {
+      return { success: false, error: `Query with id "${queryId}" not found` };
+    }
+
+    const reply = await replyRepository.create({ ...input, queryId });
     return { success: true, data: reply };
   },
 };

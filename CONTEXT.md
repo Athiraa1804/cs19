@@ -2,6 +2,12 @@
 
 # Crowd-Sourced FAQ Generation System
 
+> **Current implementation update (June 6, 2026):** The app now uses real JWT authentication,
+> server-side role enforcement, MongoDB persistence through Mongoose, persistent helpful counts,
+> and admin query-status endpoints. Older sections that describe `roleSim.ts`, `x-role` headers,
+> in-memory-only storage, or missing status/helpful endpoints describe the earlier MVP phase.
+> Legacy Prisma/PostgreSQL files remain temporarily for migration review but are not active runtime code.
+
 ## Project Name
 
 Crowd-Sourced FAQ Generation System for Vicharanashala Internship
@@ -1099,25 +1105,35 @@ Current phase:
 
 ## Backend Integration Status
 
-The backend Express TypeScript server is built and running.
+The Express TypeScript backend is integrated with MongoDB through Mongoose.
 
 **What is connected:**
-* Frontend service layer → backend REST APIs (FAQ, Query, Reply, Admin)
+* Frontend service layer → backend REST APIs for auth, FAQs, queries, replies, and admin actions
 * Backend runs at `http://localhost:3001`
-* Backend data is **in-memory only** — not persisted to a database
-* Frontend retains mock fallback when backend is unavailable (dev-friendly, no crash)
+* MongoDB persists users, FAQs, queries, replies, helpful counts, and query statuses
+* JWT authentication restores sessions and protects role-specific routes
+* Admin-only operations are enforced by backend role guards
+* `PATCH /api/faqs/:id/helpful` persists helpful-count increments
+* `PATCH /api/queries/:id/status` persists admin query-status changes
+
+**Reply flow behavior:**
+* Both intern and admin roles use `GET/POST /api/queries/:queryId/replies`
+* The reply router receives the parent `queryId` through Express merged route parameters
+* Existing queries with zero replies return `{ success: true, data: [] }`
+* Missing parent queries return `404`
+* New replies are persisted in MongoDB and update the query reply preview
+* Admin replies move open queries to `answered`
+* The UI adds successful replies immediately and keeps typed text after failed submissions
 
 **Backend API coverage:**
-* `GET /api/faqs`, `GET /api/faqs/:id` — FAQ list and detail
-* `GET /api/queries`, `GET /api/queries/:id`, `POST /api/queries` — Query CRUD
-* `GET /api/users/:userId/queries` — per-user query list
-* `GET /api/queries/:queryId/replies`, `POST /api/queries/:queryId/replies` — Replies
-* `PATCH /api/admin/replies/:replyId/verify` — Admin: mark reply verified
-* `POST /api/admin/replies/:replyId/convert-to-faq` — Admin: convert verified reply to FAQ
-
-**What is NOT yet connected:**
-* `markFaqHelpful` — no backend endpoint exists; uses local mock increment only
-* Any query status transitions (open → answered → resolved → verified → closed)
+* `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me`
+* `GET /api/faqs`, `GET /api/faqs/:id`, `PATCH /api/faqs/:id/helpful`
+* `GET /api/queries`, `GET /api/queries/:id`, `POST /api/queries`
+* `PATCH /api/queries/:id/status`
+* `GET /api/users/:userId/queries`
+* `GET /api/queries/:queryId/replies`, `POST /api/queries/:queryId/replies`
+* `PATCH /api/admin/replies/:replyId/verify`
+* `POST /api/admin/replies/:replyId/convert-to-faq`
 
 FAQ source rules:
 * `source: "existing"` — official/preloaded FAQs from seed data
@@ -1125,15 +1141,14 @@ FAQ source rules:
 
 ## Pending
 
-* MongoDB / database integration (in-memory only for now)
-* Real authentication (JWT / session-based)
-* Real admin role enforcement (current MVP uses `x-role: admin` header guard)
-* `markFaqHelpful` backend endpoint
-* Query status transition endpoints
+* Full browser-based regression testing across desktop and mobile widths
+* Production deployment configuration and secret rotation
+* Removal of retained legacy Prisma/PostgreSQL files after migration review
+* Real-time updates and notifications remain future scope
 
 ## Service Layer Integration Map
 
-Service files call backend REST APIs. Mock fallback is retained as a last-resort dev fallback.
+Service files call backend REST APIs and preserve the shared `ApiResponse<T>` contract.
 
 | Service file | Backend endpoints called |
 |---|---|
@@ -1148,9 +1163,8 @@ Pages and components consume `ApiResponse<T>` from services. They do not call AP
 
 # Known Assumptions
 
-* Backend runs with in-memory data only — no database persistence yet
-* Admin guard uses `x-role: admin` header (MVP/demo auth substitute, not production-ready)
-* Real authentication is pending
+* MongoDB is available locally or through MongoDB Atlas
+* Backend environment variables are configured in the ignored `server/.env`
 * Real-time updates are not part of MVP
 * Real AI is not part of MVP
 * Mobile-first responsiveness is required
@@ -1238,8 +1252,6 @@ Create the FAQ page UI only using the existing feature-based structure. Use stri
 
 Possible future improvements:
 
-* real authentication (JWT / session-based)
-* MongoDB / database integration
 * real admin dashboard
 * notifications
 * real-time discussion updates

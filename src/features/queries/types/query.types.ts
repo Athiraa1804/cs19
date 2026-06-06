@@ -1,3 +1,5 @@
+// Query types are shared by pages, components, and services so the UI stays aligned
+// with the backend response shape.
 export type QueryStatus = 'open' | 'answered' | 'resolved' | 'verified' | 'closed';
 
 export interface Query {
@@ -16,6 +18,8 @@ export interface Query {
   verifiedReplyId?: string;
 }
 
+// This is the editable form payload. Server-managed fields such as status,
+// creator, timestamps, and reply count are intentionally excluded.
 export interface QueryFormData {
   title: string;
   description: string;
@@ -23,6 +27,4 @@ export interface QueryFormData {
   tags: string[];
 }
 
-export interface QueryCreateInput extends QueryFormData {
-  createdBy: string;
-}
+export type QueryCreateInput = QueryFormData;

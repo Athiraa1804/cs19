@@ -5,11 +5,13 @@ import { validateQueryForm, hasErrors } from '../utils/queryValidationUtils';
 import { findSimilarItems } from '../utils/duplicateDetectionUtils';
 import type { SimilarSuggestion } from '../utils/duplicateDetectionUtils';
 import { queryService } from '../services/queryService';
-import { CURRENT_USER_ID } from '../mocks/query.mock';
+import { useAuth } from '../../auth/context/AuthContext';
 import { QueryForm } from '../components/QueryForm';
 import { SimilarFaqSuggestions } from '../components/SimilarFaqSuggestions';
 import { SimilarQuerySuggestions } from '../components/SimilarQuerySuggestions';
 
+// The page moves through explicit stages so validation, duplicate checking,
+// submission, and feedback cannot overlap or cause duplicate requests.
 type Stage = 'form' | 'suggestions' | 'submitting' | 'success' | 'error';
 
 interface Props {
@@ -18,6 +20,7 @@ interface Props {
 
 export function RaiseQueryPage({ onSuccess }: Props) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [stage, setStage] = useState<Stage>('form');
   const [errors, setErrors] = useState<ReturnType<typeof validateQueryForm>>({});
   const [pendingData, setPendingData] = useState<QueryFormData | null>(null);
@@ -35,7 +38,8 @@ export function RaiseQueryPage({ onSuccess }: Props) {
     setPendingData(data);
     setSearching(true);
 
-    findSimilarItems(data.title, data.description, CURRENT_USER_ID)
+    // Valid form data is held temporarily until the intern reviews possible duplicates.
+    findSimilarItems(data.title, data.description, user?.id ?? '')
       .then((results) => {
         setSuggestions(results);
         setSearching(false);
@@ -50,10 +54,11 @@ export function RaiseQueryPage({ onSuccess }: Props) {
 
   function handleConfirmSubmit() {
     if (!pendingData) return;
+    // Changing stage before the request disables repeated confirmation clicks.
     setStage('submitting'); // set synchronously to block double-click
 
     queryService
-      .create({ ...pendingData, createdBy: CURRENT_USER_ID })
+      .create(pendingData)
       .then((res) => {
         if (res.success && res.data) {
           setStage('success');

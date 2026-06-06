@@ -70,5 +70,3 @@ export const mockQueries: Query[] = [
 ];
 
 export const CATEGORIES = ['General', 'Finance', 'Work Mode', 'Technical', 'Onboarding', 'Support'];
-
-export const CURRENT_USER_ID = 'intern-me';

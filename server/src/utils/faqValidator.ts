@@ -3,33 +3,21 @@
  * Returns an array of error strings; empty array means valid.
  */
 import type { CreateFaqInput } from '../types/faq.js';
+import { z } from 'zod';
+import { zodErrors } from './authValidator.js';
+
+const createFaqSchema = z.object({
+  question: z.string().trim().min(10, 'question must be at least 10 characters long').max(300),
+  answer: z.string().trim().min(20, 'answer must be at least 20 characters long').max(6000),
+  category: z.string().trim().min(1, 'category is required and cannot be empty').max(80),
+  tags: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
+});
 
 export function validateCreateFaqInput(
   input: Partial<CreateFaqInput>,
 ): string[] {
-  const errors: string[] = [];
-
-  if (!input.question || input.question.trim().length === 0) {
-    errors.push('question is required and cannot be empty');
-  } else if (input.question.trim().length < 10) {
-    errors.push('question must be at least 10 characters long');
-  }
-
-  if (!input.answer || input.answer.trim().length === 0) {
-    errors.push('answer is required and cannot be empty');
-  } else if (input.answer.trim().length < 20) {
-    errors.push('answer must be at least 20 characters long');
-  }
-
-  if (!input.category || input.category.trim().length === 0) {
-    errors.push('category is required and cannot be empty');
-  }
-
-  if (input.tags !== undefined && !Array.isArray(input.tags)) {
-    errors.push('tags must be an array of strings');
-  }
-
-  return errors;
+  const result = createFaqSchema.safeParse(input);
+  return result.success ? [] : [zodErrors(result.error)];
 }
 
 /** Returns true when the given ID looks like a valid FAQ id (non-empty string). */

@@ -16,12 +16,12 @@ interface ConvertToFaqBody {
 
 /**
  * PATCH /api/admin/replies/:replyId/verify
- * Requires x-role: admin
+ * Requires authenticated admin role
  */
-export const verifyReply = (
+export const verifyReply = async (
   req: Request<{ replyId: string }>,
   res: Response<ApiResponse<VerifyReplyResult>>,
-): void => {
+): Promise<void> => {
   const { replyId } = req.params;
 
   if (!isValidReplyId(replyId)) {
@@ -32,7 +32,7 @@ export const verifyReply = (
     return;
   }
 
-  const result = adminService.verifyReply(replyId);
+  const result = await adminService.verifyReply(replyId);
 
   if (!result.success) {
     res.status(404).json(result);
@@ -44,13 +44,13 @@ export const verifyReply = (
 
 /**
  * POST /api/admin/replies/:replyId/convert-to-faq
- * Requires x-role: admin
+ * Requires authenticated admin role
  * Body: { question: string }
  */
-export const convertToFaq = (
+export const convertToFaq = async (
   req: Request<{ replyId: string }, ApiResponse<FAQ>, ConvertToFaqBody>,
   res: Response<ApiResponse<FAQ>>,
-): void => {
+): Promise<void> => {
   const { replyId } = req.params;
   const { question } = req.body ?? {};
 
@@ -62,7 +62,7 @@ export const convertToFaq = (
     return;
   }
 
-  const result = adminService.convertToFaq(replyId, question ?? '');
+  const result = await adminService.convertToFaq(replyId, question ?? '');
 
   if (!result.success) {
     const status = result.error?.includes('not found') ? 404 : 400;

@@ -8,6 +8,7 @@
  * All responses are expected to follow the ApiResponse<T> contract.
  */
 import type { ApiResponse } from '../types/apiResponse.js';
+import { getAuthToken } from '../../features/auth/utils/authToken';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:3001';
 
@@ -23,7 +24,7 @@ const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'h
  */
 export async function fetchApi<T>(
   path: string,
-  options?: RequestInit & { body?: object | string | undefined },
+  options?: Omit<RequestInit, 'body'> & { body?: unknown },
 ): Promise<ApiResponse<T>> {
   const { body, ...rest } = options ?? {};
 
@@ -31,12 +32,18 @@ export async function fetchApi<T>(
     'Content-Type': 'application/json',
     ...((rest.headers as Record<string, string>) ?? {}),
   };
+  const token = getAuthToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
       ...rest,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined
+        ? typeof body === 'string'
+          ? body
+          : JSON.stringify(body)
+        : undefined,
     });
 
     const data = await res.json() as ApiResponse<T>;
@@ -71,7 +78,7 @@ export function apiPost<T>(
 ): Promise<ApiResponse<T>> {
   return fetchApi<T>(path, {
     method: 'POST',
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body,
     headers,
   });
 }
@@ -86,7 +93,7 @@ export function apiPatch<T>(
 ): Promise<ApiResponse<T>> {
   return fetchApi<T>(path, {
     method: 'PATCH',
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body,
     headers,
   });
 }

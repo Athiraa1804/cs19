@@ -16,12 +16,12 @@ export type { GetFaqsQuery } from '../types/faq.js';
  * Query params: search?, category?
  * Returns paginated list of FAQs matching filters.
  */
-export const getFaqs = (
+export const getFaqs = async (
   req: Request<object, ApiResponse<FAQ[]>, unknown, GetFaqsQuery>,
   res: Response<ApiResponse<FAQ[]>>,
-): void => {
+): Promise<void> => {
   const { search, category } = req.query;
-  const result = faqService.getFaqs({ search, category });
+  const result = await faqService.getFaqs({ search, category });
   res.json(result);
 };
 
@@ -29,10 +29,10 @@ export const getFaqs = (
  * GET /api/faqs/:id
  * Returns a single FAQ or 404-equivalent error response.
  */
-export const getFaqById = (
+export const getFaqById = async (
   req: Request<{ id: string }>,
   res: Response<ApiResponse<FAQ>>,
-): void => {
+): Promise<void> => {
   const { id } = req.params;
 
   if (!isValidFaqId(id)) {
@@ -43,7 +43,7 @@ export const getFaqById = (
     return;
   }
 
-  const result = faqService.getFaqById(id);
+  const result = await faqService.getFaqById(id);
   if (!result.success) {
     res.status(404).json(result);
     return;
@@ -57,11 +57,11 @@ export const getFaqById = (
  * Role simulation (MVP): always creates "crowd-sourced" source.
  * Real auth will determine whether POST creates "existing" or "crowd-sourced".
  */
-export const createFaq = (
+export const createFaq = async (
   req: Request<object, ApiResponse<FAQ>, CreateFaqInput>,
   res: Response<ApiResponse<FAQ>>,
-): void => {
-  const result = faqService.createFaq(req.body);
+): Promise<void> => {
+  const result = await faqService.createFaq(req.body);
 
   if (!result.success) {
     res.status(400).json(result);
@@ -69,4 +69,30 @@ export const createFaq = (
   }
 
   res.status(201).json(result);
+};
+
+/**
+ * PATCH /api/faqs/:id/helpful
+ * Persists a helpful vote for a FAQ.
+ */
+export const markFaqHelpful = async (
+  req: Request<{ id: string }>,
+  res: Response<ApiResponse<FAQ>>,
+): Promise<void> => {
+  const { id } = req.params;
+
+  if (!isValidFaqId(id)) {
+    res.status(400).json({
+      success: false,
+      error: 'Invalid or missing FAQ id',
+    });
+    return;
+  }
+
+  const result = await faqService.markHelpful(id);
+  if (!result.success) {
+    res.status(404).json(result);
+    return;
+  }
+  res.json(result);
 };

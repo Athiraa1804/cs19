@@ -18,4 +18,5 @@ export interface CreateReplyInput {
   body: string;
   authorName: string;
   authorRole: AuthorRole;
+  authorId?: string;
 }

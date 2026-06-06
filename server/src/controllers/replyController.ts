@@ -11,10 +11,10 @@ import { isValidQueryId } from '../utils/replyValidator.js';
 /**
  * GET /api/queries/:queryId/replies
  */
-export const getRepliesForQuery = (
+export const getRepliesForQuery = async (
   req: Request<{ queryId: string }>,
   res: Response<ApiResponse<Reply[]>>,
-): void => {
+): Promise<void> => {
   const { queryId } = req.params;
 
   if (!isValidQueryId(queryId)) {
@@ -25,18 +25,23 @@ export const getRepliesForQuery = (
     return;
   }
 
-  const result = replyService.getRepliesForQuery(queryId);
+  const result = await replyService.getRepliesForQuery(queryId);
+  if (!result.success) {
+    res.status(404).json(result);
+    return;
+  }
   res.json(result);
 };
 
 /**
  * POST /api/queries/:queryId/replies
  */
-export const createReply = (
+export const createReply = async (
   req: Request<{ queryId: string }, ApiResponse<Reply>, CreateReplyInput>,
   res: Response<ApiResponse<Reply>>,
-): void => {
+): Promise<void> => {
   const { queryId } = req.params;
+  const user = req.user;
 
   if (!isValidQueryId(queryId)) {
     res.status(400).json({
@@ -46,12 +51,27 @@ export const createReply = (
     return;
   }
 
-  const result = replyService.createReply(queryId, req.body);
-
-  if (!result.success) {
-    res.status(400).json(result);
+  if (!user) {
+    res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+    });
     return;
   }
 
-  res.status(201).json(result);
+  const result = replyService.createReply(queryId, {
+    body: req.body.body,
+    authorName: user.name,
+    authorRole: user.role,
+    authorId: user.id,
+  });
+  const awaitedResult = await result;
+
+  if (!awaitedResult.success) {
+    const status = awaitedResult.error?.includes('not found') ? 404 : 400;
+    res.status(status).json(awaitedResult);
+    return;
+  }
+
+  res.status(201).json(awaitedResult);
 };

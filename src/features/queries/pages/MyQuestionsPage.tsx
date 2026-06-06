@@ -2,20 +2,23 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { Query } from '../types/query.types';
 import { queryService } from '../services/queryService';
-import { CURRENT_USER_ID } from '../mocks/query.mock';
+import { useAuth } from '../../auth/context/AuthContext';
 import { QueryCard } from '../components/QueryCard';
 import { QueryEmptyState } from '../components/QueryEmptyState';
 
 type LoadState = 'loading' | 'success' | 'error';
 
 export function MyQuestionsPage() {
+  const { user } = useAuth();
   const [queries, setQueries] = useState<Query[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    if (!user) return;
+    // The backend also checks ownership, so changing the URL cannot reveal another intern's queries.
     queryService
-      .getByUser(CURRENT_USER_ID)
+      .getByUser(user.id)
       .then((res) => {
         if (res.success && res.data) {
           setQueries(res.data);
@@ -29,7 +32,7 @@ export function MyQuestionsPage() {
         setErrorMessage('Network error. Please try again.');
         setLoadState('error');
       });
-  }, []);
+  }, [user]);
 
   // ── Loading ──────────────────────────────────────────────────
   if (loadState === 'loading') {

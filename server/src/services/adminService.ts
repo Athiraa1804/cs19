@@ -23,19 +23,20 @@ export const adminService = {
    * Marks a reply as verified and updates the parent query's verifiedReplyId
    * if the query exists. Returns 404 if the reply is not found.
    */
-  verifyReply(replyId: string): ApiResponse<VerifyReplyResult> {
-    const reply = replyRepository.findById(replyId);
+  async verifyReply(replyId: string): Promise<ApiResponse<VerifyReplyResult>> {
+    const reply = await replyRepository.findById(replyId);
     if (!reply) {
       return { success: false, error: `Reply with id "${replyId}" not found` };
     }
 
-    // Mark isVerified = true on the in-memory reply
     reply.isVerified = true;
+    await replyRepository.update(reply);
 
-    // If the parent query exists, update its verifiedReplyId
-    const query = queryRepository.findById(reply.queryId);
+    const query = await queryRepository.findById(reply.queryId);
     if (query) {
       query.verifiedReplyId = replyId;
+      query.status = 'verified';
+      await queryRepository.update(query);
     }
 
     return { success: true, data: { replyId } };
@@ -48,7 +49,7 @@ export const adminService = {
    * The reply must already be verified before conversion.
    * Returns 400 if the reply is not found or not yet verified.
    */
-  convertToFaq(replyId: string, question: string): ApiResponse<FAQ> {
+  async convertToFaq(replyId: string, question: string): Promise<ApiResponse<FAQ>> {
     // Validate question
     if (!question || question.trim().length === 0) {
       return { success: false, error: 'question is required' };
@@ -58,7 +59,7 @@ export const adminService = {
     }
 
     // Reply must exist
-    const reply = replyRepository.findById(replyId);
+    const reply = await replyRepository.findById(replyId);
     if (!reply) {
       return { success: false, error: `Reply with id "${replyId}" not found` };
     }
@@ -69,11 +70,11 @@ export const adminService = {
     }
 
     // Gather category/tags from the parent query if available
-    const query = queryRepository.findById(reply.queryId);
+    const query = await queryRepository.findById(reply.queryId);
     const category = query?.category ?? 'General';
     const tags = query?.tags ?? [];
 
-    const faq = faqRepository.create(
+    const faq = await faqRepository.create(
       {
         question: question.trim(),
         answer: reply.body,

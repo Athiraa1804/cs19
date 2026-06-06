@@ -12,8 +12,8 @@ export const queryService = {
   /**
    * GET /api/queries — list all queries, optionally filtered.
    */
-  getQueries(filters: GetQueriesQuery = {}): ApiResponse<Query[]> {
-    const queries = queryRepository.findAll(filters);
+  async getQueries(filters: GetQueriesQuery = {}): Promise<ApiResponse<Query[]>> {
+    const queries = await queryRepository.findAll(filters);
     return { success: true, data: queries };
   },
 
@@ -21,8 +21,8 @@ export const queryService = {
    * GET /api/queries/:id — fetch a single query by id.
    * Returns 404-style error response if not found.
    */
-  getQueryById(id: string): ApiResponse<Query> {
-    const query = queryRepository.findById(id);
+  async getQueryById(id: string): Promise<ApiResponse<Query>> {
+    const query = await queryRepository.findById(id);
     if (!query) {
       return { success: false, error: `Query with id "${id}" not found` };
     }
@@ -32,23 +32,30 @@ export const queryService = {
   /**
    * GET /api/users/:userId/queries — fetch all queries for a given user.
    */
-  getQueriesByUserId(userId: string): ApiResponse<Query[]> {
-    const queries = queryRepository.findByUserId(userId);
+  async getQueriesByUserId(userId: string): Promise<ApiResponse<Query[]>> {
+    const queries = await queryRepository.findByUserId(userId);
     return { success: true, data: queries };
   },
 
   /**
    * POST /api/queries — create a new query.
-   * The createdBy field must be supplied by the caller (no real auth in MVP).
+   * The createdBy field is supplied by the authenticated controller.
    * Returns validation errors as 400.
    */
-  createQuery(input: CreateQueryInput, createdBy: string): ApiResponse<Query> {
+  async createQuery(input: CreateQueryInput, createdBy: string): Promise<ApiResponse<Query>> {
     const errors = validateCreateQueryInput(input);
     if (errors.length > 0) {
       return { success: false, error: errors.join('; ') };
     }
 
-    const query = queryRepository.create({ ...input, createdBy });
+    const query = await queryRepository.create({ ...input, createdBy });
     return { success: true, data: query };
+  },
+
+  async updateQueryStatus(id: string, status: Query['status']): Promise<ApiResponse<Query>> {
+    const query = await queryRepository.findById(id);
+    if (!query) return { success: false, error: `Query with id "${id}" not found` };
+    const updated = await queryRepository.update({ ...query, status });
+    return { success: true, data: updated };
   },
 };

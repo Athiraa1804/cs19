@@ -3,6 +3,7 @@ import type { Query } from '../../queries/types/query.types';
 import { queryService } from '../../queries/services/queryService';
 import { QueryCard } from '../../queries/components/QueryCard';
 import { QueryEmptyState } from '../../queries/components/QueryEmptyState';
+import type { QueryStatus } from '../../queries/types/query.types';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -10,8 +11,10 @@ export function AdminQueriesPage() {
   const [queries, setQueries] = useState<Query[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
+    // This page is admin-protected, so it requests the complete query list rather than one user's list.
     queryService
       .getAll()
       .then((res) => {
@@ -70,6 +73,21 @@ export function AdminQueriesPage() {
   const openQueries = queries.filter((q) => q.status === 'open');
   const answeredQueries = queries.filter((q) => q.status === 'answered' || q.status === 'resolved' || q.status === 'verified');
   const closedQueries = queries.filter((q) => q.status === 'closed');
+  const statuses: QueryStatus[] = ['open', 'answered', 'resolved', 'verified', 'closed'];
+
+  function handleStatusChange(queryId: string, status: QueryStatus) {
+    // Track one updating query so only its status control is disabled during the request.
+    setUpdatingId(queryId);
+    queryService.updateStatus(queryId, status).then((res) => {
+      setUpdatingId(null);
+      if (res.success && res.data) {
+        setQueries((prev) => prev.map((query) => (query.id === queryId ? res.data! : query)));
+      } else {
+        setErrorMessage(res.error ?? 'Failed to update status');
+        setLoadState('error');
+      }
+    });
+  }
 
   function QueryGroup({ label, qs }: { label: string; qs: Query[] }) {
     if (qs.length === 0) return null;
@@ -80,7 +98,27 @@ export function AdminQueriesPage() {
         </h2>
         <div className="flex flex-col gap-3">
           {qs.map((q) => (
-            <QueryCard key={q.id} query={q} />
+            <div key={q.id} className="flex flex-col gap-2">
+              <QueryCard query={q} />
+              <div className="flex items-center gap-2 pl-1">
+                <label htmlFor={`status-${q.id}`} className="text-xs font-medium text-gray-500">
+                  Status
+                </label>
+                <select
+                  id={`status-${q.id}`}
+                  value={q.status}
+                  disabled={updatingId === q.id}
+                  onChange={(event) => handleStatusChange(q.id, event.target.value as QueryStatus)}
+                  className="text-xs border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 disabled:bg-gray-100"
+                >
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           ))}
         </div>
       </section>

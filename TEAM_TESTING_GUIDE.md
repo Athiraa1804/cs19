@@ -2,7 +2,13 @@
 
 **Project:** Crowd-Sourced FAQ Generation System for Vicharanashala Internship  
 **Branch:** `test/fullstack-mvp-testing`  
-**Last updated:** 2026-06-04
+**Last updated:** 2026-06-06
+
+> **Full-stack testing update:** Use the login page and seeded intern/admin accounts instead of
+> editing `roleSim.ts` or sending `x-role` headers. The backend now uses JWT authentication and
+> MongoDB/Mongoose persistence. Database-backed testing requires MongoDB and seed data to be
+> available first. References below to mock users, role simulation, in-memory resets, missing helpful
+> persistence, or missing query-status endpoints are retained only as historical MVP guidance.
 
 ---
 

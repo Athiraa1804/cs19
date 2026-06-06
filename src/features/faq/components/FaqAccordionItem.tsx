@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import type { FAQ } from '../types/faq.types';
-import { isAdmin } from '../../queries/types/roleSim';
+import { useAuth } from '../../auth/context/AuthContext';
 
 interface FaqAccordionItemProps {
   faq: FAQ;
@@ -14,6 +14,7 @@ interface FaqAccordionItemProps {
 
 export function FaqAccordionItem({ faq, onHelpful }: FaqAccordionItemProps) {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
 
   const sourceLabel = faq.source === 'existing' ? 'Official' : 'Community';
   const sourceColor =
@@ -85,7 +86,7 @@ export function FaqAccordionItem({ faq, onHelpful }: FaqAccordionItemProps) {
             )}
 
             {/* Helpful button — interns only */}
-            {!isAdmin() && (
+            {user?.role !== 'admin' && (
               <button
                 type="button"
                 onClick={(e) => {

@@ -1,12 +1,12 @@
 import { Router, type RequestHandler } from 'express';
-import { adminGuard } from '../middleware/adminGuard.js';
 import { verifyReply, convertToFaq } from '../controllers/adminController.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { requireAuth, requireRole } from '../middleware/authGuard.js';
 
 const router = Router();
 
-// All routes on this router are protected by the admin guard
-router.use(adminGuard as RequestHandler);
+router.use(requireAuth as RequestHandler);
+router.use(requireRole('admin') as RequestHandler);
 
 /**
  * PATCH /api/admin/replies/:replyId/verify

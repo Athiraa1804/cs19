@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { Query } from '../types/query.types';
 import type { Reply } from '../types/reply.types';
-import type { AuthorRole } from '../types/reply.types';
 import { queryService } from '../services/queryService';
 import { replyService } from '../services/replyService';
 import { adminService } from '../services/adminService';
-import { CURRENT_ROLE, isAdmin } from '../types/roleSim';
+import { useAuth } from '../../auth/context/AuthContext';
 import { QueryDetailCard } from '../components/QueryDetailCard';
 import { ReplyList } from '../components/ReplyList';
 import { ReplyForm } from '../components/ReplyForm';
@@ -16,6 +15,7 @@ type LoadState = 'loading' | 'success' | 'error';
 
 export function QueryDiscussionPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [query, setQuery] = useState<Query | null>(null);
   const [queryLoadState, setQueryLoadState] = useState<LoadState>('loading');
   const [replyLoadState, setReplyLoadState] = useState<LoadState>('loading');
@@ -30,9 +30,10 @@ export function QueryDiscussionPage() {
   const [submittingReply, setSubmittingReply] = useState(false);
   const [replySubmitError, setReplySubmitError] = useState('');
 
-  const showAdminActions = isAdmin();
+  // The same discussion page serves interns and admins; only admins receive moderation controls.
+  const showAdminActions = user?.role === 'admin';
 
-  // Load query and replies in parallel
+  // Query details and replies are independent requests, so loading them together reduces wait time.
   useEffect(() => {
     if (!id) return;
 
@@ -57,30 +58,32 @@ export function QueryDiscussionPage() {
     );
   }, [id]);
 
-  // Handle new reply submission
-  function handleReplySubmit(body: string, authorName: string, authorRole: AuthorRole) {
-    if (!id) return;
+  // Returning true tells ReplyForm it is safe to clear the textarea after persistence succeeds.
+  async function handleReplySubmit(body: string): Promise<boolean> {
+    if (!id) return false;
     setReplySubmitError('');
     setSubmittingReply(true);
-    replyService
-      .create({ queryId: id, body, authorName, authorRole })
-      .then((res) => {
-        setSubmittingReply(false);
-        if (res.success && res.data) {
-          setReplies((prev) => [...prev, res.data!]);
-          // Update reply count on query
-          if (query) setQuery((q) => q ? { ...q, replyCount: (q.replyCount ?? 0) + 1 } : q);
-        } else {
-          setReplySubmitError(res.error ?? 'Failed to post reply. Please try again.');
-        }
-      })
-      .catch(() => {
-        setSubmittingReply(false);
-        setReplySubmitError('Network error. Please check your connection and try again.');
-      });
+    try {
+      const res = await replyService.create({ queryId: id, body });
+      if (res.success && res.data) {
+        const createdReply = res.data;
+        setReplies((prev) => [...prev, createdReply]);
+        setQuery((current) =>
+          current ? { ...current, replyCount: (current.replyCount ?? 0) + 1 } : current,
+        );
+        return true;
+      }
+      setReplySubmitError(res.error ?? 'Failed to post reply. Please try again.');
+      return false;
+    } catch {
+      setReplySubmitError('Network error. Please check your connection and try again.');
+      return false;
+    } finally {
+      setSubmittingReply(false);
+    }
   }
 
-  // Handle verify reply (admin only)
+  // Verification is an admin-only backend action; the local update avoids a full page refresh.
   function handleVerify(replyId: string) {
     setVerifyingReplyId(replyId);
     adminService
@@ -98,7 +101,7 @@ export function QueryDiscussionPage() {
       });
   }
 
-  // Handle convert to FAQ (admin only)
+  // Conversion turns a verified reply into searchable crowd-sourced FAQ content.
   function handleConvertToFaqConfirm(replyId: string, faqQuestion: string) {
     setConvertingReplyId(replyId);
     setConvertError('');
@@ -144,10 +147,10 @@ export function QueryDiscussionPage() {
     <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
       {/* Back nav */}
       <Link
-        to="/queries/my"
+        to={user?.role === 'admin' ? '/admin/queries' : '/queries/my'}
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 mb-4 min-w-0 break-words"
       >
-        ← My Questions
+        {user?.role === 'admin' ? '← Query Review' : '← My Questions'}
       </Link>
 
       {/* Loading skeleton */}
@@ -229,7 +232,7 @@ export function QueryDiscussionPage() {
             )}
             <ReplyForm
               isSubmitting={submittingReply}
-              currentRole={CURRENT_ROLE}
+              currentRole={user?.role ?? 'intern'}
               onSubmit={handleReplySubmit}
             />
           </div>

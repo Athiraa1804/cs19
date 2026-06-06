@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { Query } from '../types/query.types';
 import { QueryStatusBadge } from './QueryStatusBadge';
+import { useAuth } from '../../auth/context/AuthContext';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', {
@@ -15,6 +16,9 @@ interface Props {
 }
 
 export function QueryCard({ query }: Props) {
+  const { user } = useAuth();
+  const detailsPath = user?.role === 'admin' ? `/admin/queries/${query.id}` : `/queries/${query.id}`;
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm min-w-0 break-words">
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -54,7 +58,7 @@ export function QueryCard({ query }: Props) {
       <div className="flex items-center justify-between text-xs text-gray-400 min-w-0">
         <span>Created {formatDate(query.createdAt)}</span>
         <Link
-          to={`/queries/${query.id}`}
+          to={detailsPath}
           className="text-blue-600 hover:text-blue-700 font-medium min-w-0 break-words"
         >
           View →

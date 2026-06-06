@@ -3,33 +3,23 @@
  * Returns an array of error strings; empty array means valid.
  */
 import type { CreateQueryInput } from '../types/query.js';
+import { z } from 'zod';
+import { zodErrors } from './authValidator.js';
+
+export const queryStatusSchema = z.enum(['open', 'answered', 'resolved', 'verified', 'closed']);
+
+const createQuerySchema = z.object({
+  title: z.string().trim().min(10, 'title must be at least 10 characters long').max(140),
+  description: z.string().trim().min(20, 'description must be at least 20 characters long').max(4000),
+  category: z.string().trim().min(1, 'category is required and cannot be empty').max(80),
+  tags: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
+});
 
 export function validateCreateQueryInput(
   input: Partial<CreateQueryInput>,
 ): string[] {
-  const errors: string[] = [];
-
-  if (!input.title || input.title.trim().length === 0) {
-    errors.push('title is required and cannot be empty');
-  } else if (input.title.trim().length < 10) {
-    errors.push('title must be at least 10 characters long');
-  }
-
-  if (!input.description || input.description.trim().length === 0) {
-    errors.push('description is required and cannot be empty');
-  } else if (input.description.trim().length < 20) {
-    errors.push('description must be at least 20 characters long');
-  }
-
-  if (!input.category || input.category.trim().length === 0) {
-    errors.push('category is required and cannot be empty');
-  }
-
-  if (input.tags !== undefined && !Array.isArray(input.tags)) {
-    errors.push('tags must be an array of strings');
-  }
-
-  return errors;
+  const result = createQuerySchema.safeParse(input);
+  return result.success ? [] : [zodErrors(result.error)];
 }
 
 /** Returns true when the given ID looks like a non-empty string. */

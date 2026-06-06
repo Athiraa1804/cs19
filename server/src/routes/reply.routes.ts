@@ -1,8 +1,11 @@
 import { Router, type RequestHandler } from 'express';
 import { getRepliesForQuery, createReply } from '../controllers/replyController.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { requireAuth } from '../middleware/authGuard.js';
 
-const router = Router();
+const router = Router({ mergeParams: true });
+
+router.use(requireAuth as RequestHandler);
 
 /**
  * GET /api/queries/:queryId/replies

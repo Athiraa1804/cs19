@@ -4,6 +4,10 @@
 **Branch:** `test/fullstack-mvp-testing`  
 **Testing Guide:** See `TEAM_TESTING_GUIDE.md` for instructions
 
+> **Current full-stack status (June 6, 2026):** Real login/JWT roles, MongoDB/Mongoose persistence,
+> persistent helpful counts, and query-status updates are implemented. Do report regressions in
+> those areas. Local database-backed testing still requires MongoDB and seed setup.
+
 ---
 
 ## 1. What Is a Bug Tracker?
@@ -242,13 +246,10 @@ These are already documented in `TEAM_TESTING_GUIDE.md` Section 11 (Known MVP Li
 
 | Do NOT report | Because |
 |---|---|
-| No real authentication | MVP uses a hardcoded role constant — this is by design |
-| Data resets on backend restart | Backend uses in-memory storage — no database yet |
 | No real-time updates | Reply appears only after page refresh — known gap |
-| `markFaqHelpful` not persisting | Backend endpoint does not exist yet |
 | No notifications | Not part of MVP scope |
-| Role switch requires editing a file | No UI for role switching in MVP |
-| No query status transitions | Backend does not update statuses automatically yet |
+| No file/screenshot attachments | Text-only queries and replies are current scope |
+| No real AI-generated answers | Smart search is intentionally local and deterministic |
 
 ### Missing Future Features
 
@@ -262,7 +263,6 @@ These are planned for post-MVP versions. Do not report them as bugs:
 - Advanced analytics or dashboard
 - Multi-level nested replies
 - Email or SMS alerts
-- Persistent user accounts and login
 
 ### Personal Design Preferences
 

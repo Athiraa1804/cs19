@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import healthRouter from './routes/health.routes.js';
+import authRouter from './routes/auth.routes.js';
 import faqRouter from './routes/faq.routes.js';
 import queryRouter from './routes/query.routes.js';
 import userRouter from './routes/user.routes.js';
@@ -10,30 +11,36 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 
 const app = express();
+const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 // Parse JSON bodies in incoming requests
 app.use(express.json());
 
-// Allow the React frontend running on its dev server to call the backend
-app.use(cors());
+// Allow configured frontend origins to call the backend.
+app.use(cors({ origin: allowedOrigins }));
 
 // Health check at /api/health
 app.use('/api/health', healthRouter);
 
+// Auth routes at /api/auth
+app.use('/api/auth', authRouter);
+
 // FAQ routes at /api/faqs
 app.use('/api/faqs', faqRouter);
 
-// Query routes at /api/queries
-app.use('/api/queries', queryRouter);
+// Reply routes at /api/queries/:queryId/replies
+app.use('/api/queries/:queryId/replies', replyRouter);
 
 // User-scoped query route at /api/users/:userId/queries
 app.use('/api/users', userRouter);
 
-// Reply routes at /api/queries/:queryId/replies
-// Mounted before queryRouter so /:queryId/replies matches before /:id
-app.use('/api/queries', replyRouter);
+// Query routes at /api/queries
+app.use('/api/queries', queryRouter);
 
-// Admin routes at /api/admin (protected by adminGuard middleware)
+// Admin routes at /api/admin
 app.use('/api/admin', adminRouter);
 
 // Catch unknown routes — must be registered after all real routes
