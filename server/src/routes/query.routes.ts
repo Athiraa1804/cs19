@@ -1,4 +1,5 @@
 import { Router, type RequestHandler } from 'express';
+import { upload } from '../middleware/upload.js';
 import {
   getQueries,
   getQueryById,
@@ -31,6 +32,7 @@ router.get('/:id', asyncHandler(getQueryById as unknown as RequestHandler));
 router.post(
   '/',
   requireRole('intern') as RequestHandler,
+  upload.single('attachment'),
   asyncHandler(createQuery as unknown as RequestHandler),
 );
 

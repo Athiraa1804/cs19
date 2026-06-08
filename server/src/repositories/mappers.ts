@@ -40,6 +40,7 @@ export function mapQuery(query: QueryRecord, replyCount?: number): Query {
     createdAt: query.createdAt.toISOString(),
     updatedAt: query.updatedAt.toISOString(),
     createdBy: query.createdBy,
+    attachmentUrl: query.attachmentUrl,
     latestReplyPreview: query.latestReplyPreview,
     matchedFaqIds: query.matchedFaqIds,
     verifiedReplyId: query.verifiedReplyId,

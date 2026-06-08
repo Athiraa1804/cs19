@@ -54,6 +54,7 @@ class QueryRepository {
       category: input.category.trim(),
       tags: input.tags ?? [],
       createdBy: input.createdBy,
+      attachmentUrl: input.attachmentUrl,
     });
     return mapQuery(query.toObject(), 0);
   }
@@ -67,6 +68,7 @@ class QueryRepository {
         category: query.category,
         tags: query.tags,
         status: query.status,
+        attachmentUrl: query.attachmentUrl,
         latestReplyPreview: query.latestReplyPreview,
         matchedFaqIds: query.matchedFaqIds ?? [],
         verifiedReplyId: query.verifiedReplyId,

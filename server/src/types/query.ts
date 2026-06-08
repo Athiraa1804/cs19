@@ -13,6 +13,7 @@ export interface Query {
   createdAt: string;
   updatedAt: string;
   createdBy: string;
+  attachmentUrl?: string;
   latestReplyPreview?: string;
   matchedFaqIds?: string[];
   replyCount?: number;
@@ -24,6 +25,7 @@ export interface GetQueriesQuery {
   search?: string;
   category?: string;
   status?: QueryStatus;
+ 
 }
 
 /** Fields required to create a new query via POST /api/queries */
@@ -32,6 +34,7 @@ export interface CreateQueryInput {
   description: string;
   category: string;
   tags?: string[];
+  attachmentUrl?: string;
 }
 
 /** Full input including the caller-supplied user id */

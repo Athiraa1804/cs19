@@ -51,7 +51,7 @@ export function RaiseQueryPage({ onSuccess }: Props) {
         setStage('suggestions');
       });
   }
-
+  
   function handleConfirmSubmit() {
     if (!pendingData) return;
     // Changing stage before the request disables repeated confirmation clicks.

@@ -43,6 +43,9 @@ app.use('/api/queries', queryRouter);
 // Admin routes at /api/admin
 app.use('/api/admin', adminRouter);
 
+// Serve uploaded files from the /uploads directory at the /uploads URL path
+app.use('/uploads', express.static('uploads'));
+
 // Catch unknown routes — must be registered after all real routes
 app.use(notFoundHandler);
 
