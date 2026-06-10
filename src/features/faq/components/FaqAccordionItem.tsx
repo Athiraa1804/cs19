@@ -9,11 +9,13 @@ import { useAuth } from '../../auth/context/AuthContext';
 
 interface FaqAccordionItemProps {
   faq: FAQ;
-  onHelpful?: (id: string) => void;
+  onHelpful?: (id: string) => Promise<boolean>;
 }
 
 export function FaqAccordionItem({ faq, onHelpful }: FaqAccordionItemProps) {
   const [open, setOpen] = useState(false);
+  const [helpfulPending, setHelpfulPending] = useState(false);
+  const [hasMarkedHelpful, setHasMarkedHelpful] = useState(false);
   const { user } = useAuth();
 
   const sourceLabel = faq.source === 'existing' ? 'Official' : 'Community';
@@ -89,11 +91,17 @@ export function FaqAccordionItem({ faq, onHelpful }: FaqAccordionItemProps) {
             {user?.role !== 'admin' && (
               <button
                 type="button"
-                onClick={(e) => {
+                disabled={helpfulPending || hasMarkedHelpful}
+                onClick={async (e) => {
                   e.stopPropagation();
-                  onHelpful?.(faq.id);
+                  if (!onHelpful || helpfulPending || hasMarkedHelpful) return;
+
+                  setHelpfulPending(true);
+                  const saved = await onHelpful(faq.id);
+                  setHelpfulPending(false);
+                  if (saved) setHasMarkedHelpful(true);
                 }}
-                className="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium focus:outline-none focus-visible:underline"
+                className="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium focus:outline-none focus-visible:underline disabled:opacity-60 disabled:cursor-default"
               >
                 👍 Helpful
               </button>

@@ -16,7 +16,7 @@ export function FAQPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
-  const { faqs, loading, error, retry } = useFaqSearch(search, category);
+  const { faqs, loading, error, retry, markHelpful } = useFaqSearch(search, category);
 
   // Derive categories dynamically from the loaded FAQs' categories
   const categories = (() => {
@@ -54,10 +54,7 @@ export function FAQPage() {
       {!loading && !error && faqs.length > 0 && (
         <FaqList
           faqs={faqs}
-          onHelpful={(id) => {
-            // future: call markFaqHelpful service
-            console.info('Mark helpful:', id);
-          }}
+          onHelpful={markHelpful}
         />
       )}
 

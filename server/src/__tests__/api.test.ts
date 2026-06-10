@@ -203,6 +203,29 @@ describe('API auth and protected flows', () => {
     expect(response.body.data.token).toBeTruthy();
   });
 
+  it('allows an authenticated intern to mark an FAQ as helpful', async () => {
+    const now = new Date().toISOString();
+    state.faqs = [{
+      id: 'faq-helpful',
+      question: 'Is this FAQ helpful?',
+      answer: 'This FAQ exists to test helpful voting.',
+      category: 'Support',
+      tags: ['helpful'],
+      helpfulCount: 2,
+      source: 'existing',
+      createdAt: now,
+      updatedAt: now,
+    }];
+    const token = await login('intern@example.com', 'intern12345');
+
+    const response = await request(app)
+      .patch('/api/faqs/faq-helpful/helpful')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.helpfulCount).toBe(3);
+  });
+
   it('rejects protected routes without a token', async () => {
     const response = await request(app).get('/api/queries');
 
