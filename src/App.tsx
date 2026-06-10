@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { RaiseQueryPage } from './features/queries/pages/RaiseQueryPage';
 import { FAQPage } from './features/faq/pages/FAQPage';
 import { MyQuestionsPage } from './features/queries/pages/MyQuestionsPage';
+import { AllQuestionsPage } from './features/queries/pages/AllQuestionsPage';
 import { QueryDiscussionPage } from './features/queries/pages/QueryDiscussionPage';
 import { AdminQueriesPage } from './features/admin/pages/AdminQueriesPage';
 import { AuthProvider, useAuth } from './features/auth/context/AuthContext';
@@ -58,6 +59,16 @@ function NavBar() {
             </Link>
             {user && !admin && (
               <>
+                <Link
+                  to="/queries"
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors min-w-0 break-words ${
+                    isActive('/queries')
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  All Questions
+                </Link>
                 <Link
                   to="/queries/raise"
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors min-w-0 break-words ${
@@ -156,6 +167,7 @@ export function App() {
               <Route path="/faqs" element={<RoleRoute><FAQPage /></RoleRoute>} />
               <Route path="/queries/raise" element={<RoleRoute allowed="intern"><RaiseQueryPage /></RoleRoute>} />
               <Route path="/queries/my" element={<RoleRoute allowed="intern"><MyQuestionsPage /></RoleRoute>} />
+              <Route path="/queries" element={<RoleRoute allowed="intern"><AllQuestionsPage /></RoleRoute>} />
               <Route path="/queries/:id" element={<RoleRoute allowed="intern"><QueryDiscussionPage /></RoleRoute>} />
               <Route path="/admin/queries" element={<RoleRoute allowed="admin"><AdminQueriesPage /></RoleRoute>} />
               <Route path="/admin/queries/:id" element={<RoleRoute allowed="admin"><QueryDiscussionPage /></RoleRoute>} />

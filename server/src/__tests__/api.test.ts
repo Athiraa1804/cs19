@@ -135,6 +135,15 @@ describe('API auth and protected flows', () => {
         createdAt: now,
         updatedAt: now,
       },
+      {
+        id: 'intern-2',
+        name: 'Second Intern',
+        email: 'intern2@example.com',
+        role: 'intern',
+        passwordHash: await hashPassword('intern22345'),
+        createdAt: now,
+        updatedAt: now,
+      },
     ];
     state.queries = [
       {
@@ -277,6 +286,31 @@ describe('API auth and protected flows', () => {
     expect(response.status).toBe(403);
   });
 
+  it('allows an intern to discover queries raised by other interns through the shared list', async () => {
+    state.queries.push({
+      id: 'q-intern-2',
+      title: 'Question raised by Intern B',
+      description: 'This shared question should be visible to every signed-in intern.',
+      category: 'Support',
+      tags: ['shared'],
+      status: 'open',
+      matchedFaqIds: [],
+      createdBy: 'intern-2',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    const token = await login('intern@example.com', 'intern12345');
+
+    const response = await request(app)
+      .get('/api/queries')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'q-intern-2', createdBy: 'intern-2' })]),
+    );
+  });
+
   it('returns an empty reply list for an existing query with no replies', async () => {
     const token = await login('intern@example.com', 'intern12345');
 
@@ -286,6 +320,93 @@ describe('API auth and protected flows', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual([]);
+  });
+
+  it('returns all intern, admin, verified, and unverified replies to an intern', async () => {
+    state.replies.push({
+      id: 'r-intern',
+      queryId: 'q-1',
+      body: 'An unverified answer from an intern.',
+      authorName: 'Intern User',
+      authorRole: 'intern',
+      authorId: 'intern-1',
+      createdAt: new Date().toISOString(),
+      isVerified: false,
+    });
+    state.replies.push({
+      id: 'r-verified',
+      queryId: 'q-1',
+      body: 'A verified answer from an admin.',
+      authorName: 'Admin User',
+      authorRole: 'admin',
+      authorId: 'admin-1',
+      createdAt: new Date().toISOString(),
+      isVerified: true,
+    });
+    const token = await login('intern@example.com', 'intern12345');
+
+    const response = await request(app)
+      .get('/api/queries/q-1/replies')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ authorRole: 'admin', isVerified: false }),
+        expect.objectContaining({ authorRole: 'intern', isVerified: false }),
+        expect.objectContaining({ authorRole: 'admin', isVerified: true }),
+      ]),
+    );
+  });
+
+  it.each([
+    ['intern@example.com', 'intern12345'],
+    ['intern2@example.com', 'intern22345'],
+    ['admin@example.com', 'admin12345'],
+  ])('returns replies from Intern A, Intern B, and Admin to %s', async (email, password) => {
+    state.replies = [
+      {
+        id: 'r-intern-a',
+        queryId: 'q-1',
+        body: 'Answer from Intern A.',
+        authorName: 'Intern User',
+        authorRole: 'intern',
+        authorId: 'intern-1',
+        isVerified: false,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'r-intern-b',
+        queryId: 'q-1',
+        body: 'Answer from Intern B.',
+        authorName: 'Second Intern',
+        authorRole: 'intern',
+        authorId: 'intern-2',
+        isVerified: false,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'r-admin',
+        queryId: 'q-1',
+        body: 'Answer from Admin.',
+        authorName: 'Admin User',
+        authorRole: 'admin',
+        authorId: 'admin-1',
+        isVerified: true,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    const token = await login(email, password);
+
+    const response = await request(app)
+      .get('/api/queries/q-1/replies')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(3);
+    expect(response.body.data.map((reply: { authorId: string }) => reply.authorId)).toEqual(
+      expect.arrayContaining(['intern-1', 'intern-2', 'admin-1']),
+    );
   });
 
   it.each([
@@ -317,6 +438,22 @@ describe('API auth and protected flows', () => {
 
     expect(getResponse.status).toBe(404);
     expect(postResponse.status).toBe(404);
+  });
+
+  it('prevents interns from verifying or converting replies to FAQs', async () => {
+    const token = await login('intern@example.com', 'intern12345');
+
+    const verifyResponse = await request(app)
+      .patch('/api/admin/replies/r-1/verify')
+      .set('Authorization', `Bearer ${token}`)
+      .send();
+    const faqResponse = await request(app)
+      .post('/api/admin/replies/r-1/convert-to-faq')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ question: 'When is the internship stipend processed?' });
+
+    expect(verifyResponse.status).toBe(403);
+    expect(faqResponse.status).toBe(403);
   });
 
   it('allows admin status updates and FAQ conversion', async () => {

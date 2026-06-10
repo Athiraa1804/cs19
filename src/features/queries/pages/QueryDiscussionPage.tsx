@@ -132,10 +132,10 @@ export function QueryDiscussionPage() {
         <h2 className="text-lg font-semibold text-gray-800 mb-2">Query Not Found</h2>
         <p className="text-sm text-gray-500 mb-4">{queryError}</p>
         <Link
-          to="/queries/my"
+          to={user?.role === 'admin' ? '/admin/queries' : '/queries'}
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
         >
-          Back to My Questions
+          Back to Questions
         </Link>
       </div>
     );
@@ -147,10 +147,10 @@ export function QueryDiscussionPage() {
     <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
       {/* Back nav */}
       <Link
-        to={user?.role === 'admin' ? '/admin/queries' : '/queries/my'}
+        to={user?.role === 'admin' ? '/admin/queries' : '/queries'}
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 mb-4 min-w-0 break-words"
       >
-        {user?.role === 'admin' ? '← Query Review' : '← My Questions'}
+        {user?.role === 'admin' ? '← Query Review' : '← All Questions'}
       </Link>
 
       {/* Loading skeleton */}
