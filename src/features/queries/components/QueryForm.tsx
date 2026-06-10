@@ -16,6 +16,7 @@ export function QueryForm({ errors, isSubmitting, onSubmit, onCancel }: Props) {
   const [category, setCategory] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [attachment, setAttachment] = useState<File | null>(null);
 
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -30,6 +31,7 @@ export function QueryForm({ errors, isSubmitting, onSubmit, onCancel }: Props) {
     }
     setTagInput('');
   }
+  
 
   function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' || e.key === ',') {
@@ -46,7 +48,13 @@ export function QueryForm({ errors, isSubmitting, onSubmit, onCancel }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ title, description, category, tags });
+    onSubmit({
+    title,
+    description,
+    category,
+    tags,
+    attachment,
+  });
   }
 
   const canSubmit = title.trim() && description.trim() && category && !isSubmitting;
@@ -174,6 +182,32 @@ export function QueryForm({ errors, isSubmitting, onSubmit, onCancel }: Props) {
         </div>
         <p className="text-xs text-gray-400">Press Enter or comma to add a tag</p>
       </div>
+
+      {/* Attachment */}
+<div className="flex flex-col gap-1.5">
+  <label htmlFor="q-attachment" className="text-sm font-medium text-gray-700">
+    Attachment (optional)
+  </label>
+
+  <input
+    id="q-attachment"
+    type="file"
+    accept=".jpg,.jpeg,.png,.pdf"
+    disabled={isSubmitting}
+    onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
+    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+  />
+
+  {attachment && (
+    <p className="text-xs text-green-600">
+      Selected: {attachment.name}
+    </p>
+  )}
+
+  <p className="text-xs text-gray-400">
+    Upload screenshots, PDFs, or supporting documents.
+  </p>
+</div>
 
       {/* Actions */}
       <div className="flex gap-3 pt-2">

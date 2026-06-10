@@ -98,7 +98,17 @@ export const createQuery = async (
     return;
   }
 
-  const result = await queryService.createQuery(req.body, req.user.id);
+  const attachmentUrl = req.file
+  ? `/uploads/${req.file.filename}`
+  : undefined;
+
+const result = await queryService.createQuery(
+  {
+    ...req.body,
+    attachmentUrl,
+  },
+  req.user.id,
+);
 
   if (!result.success) {
     res.status(400).json(result);

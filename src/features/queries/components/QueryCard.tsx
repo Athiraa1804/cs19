@@ -16,6 +16,7 @@ interface Props {
 }
 
 export function QueryCard({ query }: Props) {
+  console.log(query);
   const { user } = useAuth();
   const detailsPath = user?.role === 'admin' ? `/admin/queries/${query.id}` : `/queries/${query.id}`;
 
@@ -45,6 +46,7 @@ export function QueryCard({ query }: Props) {
           </span>
         ))}
       </div>
+       
 
       {query.latestReplyPreview && (
         <div className="bg-gray-50 rounded-lg p-2.5 mb-3 min-w-0 break-words">

@@ -15,6 +15,7 @@ export interface QueryRecord {
   verifiedReplyId?: string;
   createdAt: Date;
   updatedAt: Date;
+  attachmentUrl?: string;
 }
 
 const querySchema = new mongoose.Schema<QueryRecord>(
@@ -34,6 +35,7 @@ const querySchema = new mongoose.Schema<QueryRecord>(
     latestReplyPreview: String,
     matchedFaqIds: { type: [String], default: [] },
     verifiedReplyId: String,
+    attachmentUrl: String,
   },
   { timestamps: true, versionKey: false },
 );

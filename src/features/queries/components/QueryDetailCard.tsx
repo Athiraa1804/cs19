@@ -28,6 +28,18 @@ export function QueryDetailCard({ query }: Props) {
       <p className="text-sm text-gray-700 mb-4 min-w-0 break-words leading-relaxed">
         {query.description}
       </p>
+      {query.attachmentUrl && (
+  <div className="mb-4">
+    <a
+      href={`http://localhost:3001${query.attachmentUrl}`}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 underline"
+    >
+      📎 View Attachment
+    </a>
+  </div>
+)}
 
       <div className="flex flex-wrap items-center gap-1.5 mb-3">
         <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium min-w-0 break-words">

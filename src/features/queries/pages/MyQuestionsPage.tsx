@@ -11,7 +11,8 @@ type LoadState = 'loading' | 'success' | 'error';
 export function MyQuestionsPage() {
   const { user } = useAuth();
   const [queries, setQueries] = useState<Query[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [loadState, setLoadState] = useState<LoadState>('loading')
+  ;
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
