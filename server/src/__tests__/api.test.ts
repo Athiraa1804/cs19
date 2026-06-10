@@ -231,6 +231,26 @@ describe('API auth and protected flows', () => {
     expect(response.body.data.createdBy).toBe('intern-1');
   });
 
+  it('creates a query with an attachment', async () => {
+    const token = await login('intern@example.com', 'intern12345');
+
+    const response = await request(app)
+      .post('/api/queries')
+      .set('Authorization', `Bearer ${token}`)
+      .field('title', 'Need help with attached document')
+      .field('description', 'I attached a text document that shows the issue I am seeing.')
+      .field('category', 'Onboarding')
+      .field('tags', JSON.stringify(['documents']))
+      .attach('attachment', Buffer.from('example attachment'), {
+        filename: 'example.txt',
+        contentType: 'text/plain',
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.attachment.originalName).toBe('example.txt');
+    expect(response.body.data.attachment.url).toMatch(/^\/uploads\/queries\//);
+  });
+
   it('prevents admins from creating intern queries', async () => {
     const token = await login('admin@example.com', 'admin12345');
 

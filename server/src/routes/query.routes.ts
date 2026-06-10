@@ -1,5 +1,4 @@
 import { Router, type RequestHandler } from 'express';
-import { upload } from '../middleware/upload.js';
 import {
   getQueries,
   getQueryById,
@@ -9,6 +8,7 @@ import {
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { requireAuth } from '../middleware/authGuard.js';
 import { requireRole } from '../middleware/authGuard.js';
+import { queryUpload } from '../middleware/queryUpload.js';
 
 const router = Router();
 
@@ -27,12 +27,12 @@ router.get('/:id', asyncHandler(getQueryById as unknown as RequestHandler));
 
 /**
  * POST /api/queries
- * Body: { title, description, category, tags? }
+ * Multipart body: { title, description, category, tags?, attachment? }
  */
 router.post(
   '/',
   requireRole('intern') as RequestHandler,
-  upload.single('attachment'),
+  queryUpload.single('attachment'),
   asyncHandler(createQuery as unknown as RequestHandler),
 );
 

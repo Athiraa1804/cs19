@@ -1,5 +1,6 @@
 import type { Query } from '../types/query.types';
 import { QueryStatusBadge } from './QueryStatusBadge';
+import { apiUrl } from '../../../shared/utils/apiClient';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', {
@@ -40,6 +41,17 @@ export function QueryDetailCard({ query }: Props) {
     </a>
   </div>
 )}
+
+      {query.attachment && (
+        <a
+          href={apiUrl(query.attachment.url)}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 mb-4 text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
+          Attachment: {query.attachment.originalName}
+        </a>
+      )}
 
       <div className="flex flex-wrap items-center gap-1.5 mb-3">
         <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium min-w-0 break-words">

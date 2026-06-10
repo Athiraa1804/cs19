@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import mongoose from 'mongoose';
-import type { QueryStatus } from '../types/query.js';
+import type { QueryAttachment, QueryStatus } from '../types/query.js';
 
 export interface QueryRecord {
   id: string;
@@ -16,7 +16,18 @@ export interface QueryRecord {
   createdAt: Date;
   updatedAt: Date;
   attachmentUrl?: string;
+  attachment?: QueryAttachment;
 }
+
+const attachmentSchema = new mongoose.Schema<QueryAttachment>(
+  {
+    originalName: { type: String, required: true },
+    url: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    size: { type: Number, required: true },
+  },
+  { _id: false },
+);
 
 const querySchema = new mongoose.Schema<QueryRecord>(
   {
@@ -36,6 +47,7 @@ const querySchema = new mongoose.Schema<QueryRecord>(
     matchedFaqIds: { type: [String], default: [] },
     verifiedReplyId: String,
     attachmentUrl: String,
+    attachment: { type: attachmentSchema, default: undefined },
   },
   { timestamps: true, versionKey: false },
 );

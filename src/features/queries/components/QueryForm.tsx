@@ -16,7 +16,7 @@ export function QueryForm({ errors, isSubmitting, onSubmit, onCancel }: Props) {
   const [category, setCategory] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  const [attachment, setAttachment] = useState<File | null>(null);
+  const [attachment, setAttachment] = useState<File | undefined>();
 
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -48,13 +48,7 @@ export function QueryForm({ errors, isSubmitting, onSubmit, onCancel }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({
-    title,
-    description,
-    category,
-    tags,
-    attachment,
-  });
+    onSubmit({ title, description, category, tags, attachment });
   }
 
   const canSubmit = title.trim() && description.trim() && category && !isSubmitting;
@@ -184,30 +178,25 @@ export function QueryForm({ errors, isSubmitting, onSubmit, onCancel }: Props) {
       </div>
 
       {/* Attachment */}
-<div className="flex flex-col gap-1.5">
-  <label htmlFor="q-attachment" className="text-sm font-medium text-gray-700">
-    Attachment (optional)
-  </label>
-
-  <input
-    id="q-attachment"
-    type="file"
-    accept=".jpg,.jpeg,.png,.pdf"
-    disabled={isSubmitting}
-    onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
-    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-  />
-
-  {attachment && (
-    <p className="text-xs text-green-600">
-      Selected: {attachment.name}
-    </p>
-  )}
-
-  <p className="text-xs text-gray-400">
-    Upload screenshots, PDFs, or supporting documents.
-  </p>
-</div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="q-attachment" className="text-sm font-medium text-gray-700">
+          Attachment (optional)
+        </label>
+        <input
+          id="q-attachment"
+          type="file"
+          accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt"
+          onChange={(e) => setAttachment(e.target.files?.[0])}
+          disabled={isSubmitting}
+          className="w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 disabled:cursor-not-allowed"
+        />
+        {attachment && (
+          <p className="text-xs text-green-600">Selected: {attachment.name}</p>
+        )}
+        <p className="text-xs text-gray-400">
+          PDF, image, Word, or text file up to 5 MB
+        </p>
+      </div>
 
       {/* Actions */}
       <div className="flex gap-3 pt-2">

@@ -83,7 +83,7 @@ export const getQueriesByUserId = async (
 
 /**
  * POST /api/queries
- * Body: { title, description, category, tags? }
+ * Multipart body: { title, description, category, tags?, attachment? }
  * createdBy comes from the authenticated session.
  */
 export const createQuery = async (
@@ -98,17 +98,36 @@ export const createQuery = async (
     return;
   }
 
-  const attachmentUrl = req.file
-  ? `/uploads/${req.file.filename}`
-  : undefined;
+  let tags: string[] | undefined;
+  if (typeof req.body.tags === 'string') {
+    try {
+      const parsed = JSON.parse(req.body.tags) as unknown;
+      if (Array.isArray(parsed)) tags = parsed;
+    } catch {
+      tags = undefined;
+    }
+  } else {
+    tags = req.body.tags;
+  }
 
-const result = await queryService.createQuery(
-  {
-    ...req.body,
+  const attachmentUrl = req.file ? `/uploads/queries/${req.file.filename}` : undefined;
+  const input: CreateQueryInput = {
+    title: req.body.title,
+    description: req.body.description,
+    category: req.body.category,
+    tags,
     attachmentUrl,
-  },
-  req.user.id,
-);
+    attachment: req.file
+      ? {
+          originalName: req.file.originalname,
+          url: attachmentUrl!,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        }
+      : undefined,
+  };
+
+  const result = await queryService.createQuery(input, req.user.id);
 
   if (!result.success) {
     res.status(400).json(result);

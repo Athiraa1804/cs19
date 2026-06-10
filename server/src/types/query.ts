@@ -3,6 +3,13 @@
  */
 export type QueryStatus = 'open' | 'answered' | 'resolved' | 'verified' | 'closed';
 
+export interface QueryAttachment {
+  originalName: string;
+  url: string;
+  mimeType: string;
+  size: number;
+}
+
 export interface Query {
   id: string;
   title: string;
@@ -18,6 +25,7 @@ export interface Query {
   matchedFaqIds?: string[];
   replyCount?: number;
   verifiedReplyId?: string;
+  attachment?: QueryAttachment;
 }
 
 /** Query params for GET /api/queries */
@@ -35,6 +43,7 @@ export interface CreateQueryInput {
   category: string;
   tags?: string[];
   attachmentUrl?: string;
+  attachment?: QueryAttachment;
 }
 
 /** Full input including the caller-supplied user id */

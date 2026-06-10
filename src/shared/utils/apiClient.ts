@@ -12,6 +12,10 @@ import { getAuthToken } from '../../features/auth/utils/authToken';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:3001';
 
+export function apiUrl(path: string): string {
+  return `${BASE_URL}${path}`;
+}
+
 /**
  * Typed fetch wrapper that:
  * - Always sends/receives JSON
@@ -27,9 +31,10 @@ export async function fetchApi<T>(
   options?: Omit<RequestInit, 'body'> & { body?: unknown },
 ): Promise<ApiResponse<T>> {
   const { body, ...rest } = options ?? {};
+  const isFormData = body instanceof FormData;
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...((rest.headers as Record<string, string>) ?? {}),
   };
   const token = getAuthToken();
@@ -40,7 +45,9 @@ export async function fetchApi<T>(
       ...rest,
       headers,
       body: body !== undefined
-        ? typeof body === 'string'
+        ? isFormData
+          ? body
+          : typeof body === 'string'
           ? body
           : JSON.stringify(body)
         : undefined,

@@ -5,3 +5,4 @@ dist/
 .env.local
 data/
 server/src/generated/
+server/uploads/

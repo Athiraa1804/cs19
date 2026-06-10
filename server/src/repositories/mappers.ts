@@ -45,6 +45,7 @@ export function mapQuery(query: QueryRecord, replyCount?: number): Query {
     matchedFaqIds: query.matchedFaqIds,
     verifiedReplyId: query.verifiedReplyId,
     replyCount,
+    attachment: query.attachment,
   };
 }
 

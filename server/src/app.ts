@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'node:path';
 import cors from 'cors';
 import healthRouter from './routes/health.routes.js';
 import authRouter from './routes/auth.routes.js';
@@ -21,6 +22,7 @@ app.use(express.json());
 
 // Allow configured frontend origins to call the backend.
 app.use(cors({ origin: allowedOrigins }));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Health check at /api/health
 app.use('/api/health', healthRouter);
