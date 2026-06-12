@@ -11,13 +11,11 @@ type LoadState = 'loading' | 'success' | 'error';
 export function MyQuestionsPage() {
   const { user } = useAuth();
   const [queries, setQueries] = useState<Query[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>('loading')
-  ;
+  const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (!user) return;
-    // The backend also checks ownership, so changing the URL cannot reveal another intern's queries.
     queryService
       .getByUser(user.id)
       .then((res) => {
@@ -25,7 +23,7 @@ export function MyQuestionsPage() {
           setQueries(res.data);
           setLoadState('success');
         } else {
-          setErrorMessage(res.error ?? 'Failed to load queries');
+          setErrorMessage(res.error ?? 'Failed to load your questions');
           setLoadState('error');
         }
       })
@@ -35,72 +33,69 @@ export function MyQuestionsPage() {
       });
   }, [user]);
 
-  // ── Loading ──────────────────────────────────────────────────
   if (loadState === 'loading') {
     return (
-      <div className="max-w-lg mx-auto px-4 py-12 min-h-screen flex flex-col items-center justify-center">
-        <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-sm text-gray-500">Loading your queries…</p>
+      <div className="max-w-3xl mx-auto px-4 py-20 min-h-screen flex flex-col items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4" />
+        <p className="text-sm text-slate-500 font-medium">Loading your activity...</p>
       </div>
     );
   }
 
-  // ── Error ────────────────────────────────────────────────────
   if (loadState === 'error') {
     return (
-      <div className="max-w-lg mx-auto px-4 py-12 min-h-screen flex flex-col items-center text-center">
-        <div className="text-4xl mb-3">⚠️</div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">Couldn't load queries</h2>
-        <p className="text-sm text-red-600 mb-4">{errorMessage}</p>
+      <div className="max-w-lg mx-auto px-4 py-20 min-h-screen flex flex-col items-center text-center">
+        <div className="text-4xl mb-4">⚠️</div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">Unable to load</h2>
+        <p className="text-sm text-slate-500 mb-6">{errorMessage}</p>
         <button
           onClick={() => window.location.reload()}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+          className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-3 px-6 rounded-xl transition-all"
         >
-          Retry
+          Retry connection
         </button>
       </div>
     );
   }
 
-  // ── Empty ────────────────────────────────────────────────────
-  if (queries.length === 0) {
-    return (
-      <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">My Questions</h1>
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-10 min-h-screen">
+      <div className="flex items-center justify-between mb-10">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900 mb-2 tracking-tight">My Activity</h1>
+          <p className="text-sm text-slate-500">Track the status of questions you've raised.</p>
+        </div>
+        
+        {queries.length > 0 && (
+          <Link
+            to="/queries/raise"
+            className="text-sm font-semibold text-slate-900 hover:text-slate-600 transition-colors"
+          >
+            + Ask Question
+          </Link>
+        )}
+      </div>
+
+      {queries.length === 0 ? (
         <QueryEmptyState
-          title="No queries yet"
-          description="You haven't raised any queries. If you can't find an answer in the FAQs, go ahead and raise one."
+          title="No activity yet"
+          description="You haven't raised any questions. If you need help, feel free to start a new discussion."
           action={
             <Link
               to="/queries/raise"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-6 rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-3 px-6 rounded-xl transition-all shadow-sm"
             >
-              Raise a Query
+              Ask a Question
             </Link>
           }
         />
-      </div>
-    );
-  }
-
-  // ── Success ──────────────────────────────────────────────────
-  return (
-    <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-900">My Questions</h1>
-        <Link
-          to="/queries/raise"
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium min-w-0 break-words"
-        >
-          + New Query
-        </Link>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        {queries.map((query) => (
-          <QueryCard key={query.id} query={query} />
-        ))}
-      </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {queries.map((query) => (
+            <QueryCard key={query.id} query={query} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

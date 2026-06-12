@@ -30,13 +30,10 @@ export function QueryDiscussionPage() {
   const [submittingReply, setSubmittingReply] = useState(false);
   const [replySubmitError, setReplySubmitError] = useState('');
 
-  // The same discussion page serves interns and admins; only admins receive moderation controls.
   const showAdminActions = user?.role === 'admin';
 
-  // Query details and replies are independent requests, so loading them together reduces wait time.
   useEffect(() => {
     if (!id) return;
-
     Promise.all([queryService.getById(id), replyService.getByQueryId(id)]).then(
       ([queryRes, replyRes]) => {
         if (queryRes.success && queryRes.data) {
@@ -46,7 +43,6 @@ export function QueryDiscussionPage() {
           setQueryError(queryRes.error ?? 'Query not found');
           setQueryLoadState('error');
         }
-
         if (replyRes.success && replyRes.data) {
           setReplies(replyRes.data);
           setReplyLoadState('success');
@@ -58,7 +54,6 @@ export function QueryDiscussionPage() {
     );
   }, [id]);
 
-  // Returning true tells ReplyForm it is safe to clear the textarea after persistence succeeds.
   async function handleReplySubmit(body: string): Promise<boolean> {
     if (!id) return false;
     setReplySubmitError('');
@@ -66,77 +61,55 @@ export function QueryDiscussionPage() {
     try {
       const res = await replyService.create({ queryId: id, body });
       if (res.success && res.data) {
-        const createdReply = res.data;
-        setReplies((prev) => [...prev, createdReply]);
-        setQuery((current) =>
-          current ? { ...current, replyCount: (current.replyCount ?? 0) + 1 } : current,
-        );
+        setReplies((prev) => [...prev, res.data!]);
+        setQuery((current) => current ? { ...current, replyCount: (current.replyCount ?? 0) + 1 } : current);
         return true;
       }
-      setReplySubmitError(res.error ?? 'Failed to post reply. Please try again.');
+      setReplySubmitError(res.error ?? 'Failed to post reply.');
       return false;
     } catch {
-      setReplySubmitError('Network error. Please check your connection and try again.');
+      setReplySubmitError('Network error. Please try again.');
       return false;
     } finally {
       setSubmittingReply(false);
     }
   }
 
-  // Verification is an admin-only backend action; the local update avoids a full page refresh.
   function handleVerify(replyId: string) {
     setVerifyingReplyId(replyId);
-    adminService
-      .verifyReply(replyId)
-      .then((res) => {
-        setVerifyingReplyId(null);
-        if (res.success) {
-          setReplies((prev) =>
-            prev.map((r) => (r.id === replyId ? { ...r, isVerified: true } : r))
-          );
-        }
-      })
-      .catch(() => {
-        setVerifyingReplyId(null);
-      });
+    adminService.verifyReply(replyId).then((res) => {
+      setVerifyingReplyId(null);
+      if (res.success) {
+        setReplies((prev) => prev.map((r) => (r.id === replyId ? { ...r, isVerified: true } : r)));
+      }
+    }).catch(() => setVerifyingReplyId(null));
   }
 
-  // Conversion turns a verified reply into searchable crowd-sourced FAQ content.
   function handleConvertToFaqConfirm(replyId: string, faqQuestion: string) {
     setConvertingReplyId(replyId);
     setConvertError('');
     setConvertSuccess('');
-
-    adminService
-      .convertReplyToFaq(replyId, faqQuestion)
-      .then((res) => {
-        setConvertingReplyId(null);
-        if (res.success && res.data) {
-          setConvertSuccess(`✅ FAQ created: "${res.data.question}"`);
-          setReplyToConvert(null);
-        } else {
-          setConvertError(res.error ?? 'Failed to convert to FAQ');
-        }
-      })
-      .catch(() => {
-        setConvertingReplyId(null);
-        setConvertError('Network error. Please try again.');
-      });
+    adminService.convertReplyToFaq(replyId, faqQuestion).then((res) => {
+      setConvertingReplyId(null);
+      if (res.success && res.data) {
+        setConvertSuccess(`FAQ created: "${res.data.question}"`);
+        setReplyToConvert(null);
+      } else {
+        setConvertError(res.error ?? 'Failed to convert.');
+      }
+    }).catch(() => {
+      setConvertingReplyId(null);
+      setConvertError('Network error.');
+    });
   }
 
-  // ── Error state ───────────────────────────────────────────────
   if (queryLoadState === 'error') {
     return (
-      <div className="max-w-lg mx-auto px-4 py-12 min-h-screen flex flex-col items-center text-center">
-        <div className="text-4xl mb-3">🔍</div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">Query Not Found</h2>
-        <p className="text-sm text-gray-500 mb-4">{queryError}</p>
-        <Link
-          to={user?.role === 'admin' ? '/admin/queries' : '/queries'}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
-        >
-          Back to Questions
-        </Link>
+      <div className="max-w-lg mx-auto px-4 py-20 min-h-screen flex flex-col items-center text-center">
+        <div className="text-4xl mb-4">🔍</div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">Query not found</h2>
+        <p className="text-sm text-slate-500 mb-8">{queryError}</p>
+        <Link to="/" className="bg-slate-900 text-white text-sm font-semibold py-3 px-6 rounded-xl">Back Home</Link>
       </div>
     );
   }
@@ -144,48 +117,28 @@ export function QueryDiscussionPage() {
   const isLoading = queryLoadState === 'loading' || replyLoadState === 'loading';
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
-      {/* Back nav */}
-      <Link
-        to={user?.role === 'admin' ? '/admin/queries' : '/queries'}
-        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 mb-4 min-w-0 break-words"
-      >
-        {user?.role === 'admin' ? '← Query Review' : '← All Questions'}
+    <div className="max-w-3xl mx-auto px-4 py-10 min-h-screen">
+      <Link to={showAdminActions ? '/admin/queries' : '/queries'} className="text-sm text-slate-500 hover:text-slate-900 mb-6 flex items-center gap-1">
+        ← Back to list
       </Link>
 
-      {/* Loading skeleton */}
       {isLoading ? (
-        <div className="animate-pulse space-y-3">
-          <div className="h-32 bg-gray-200 rounded-xl" />
-          <div className="h-20 bg-gray-200 rounded-xl" />
-          <div className="h-20 bg-gray-200 rounded-xl" />
+        <div className="animate-pulse space-y-6">
+          <div className="h-48 bg-slate-100 rounded-2xl" />
+          <div className="h-32 bg-slate-100 rounded-2xl" />
         </div>
       ) : query ? (
         <>
-          {/* Query detail card */}
           <QueryDetailCard query={{ ...query, replyCount: replies.length }} />
 
-          {/* Replies section */}
-          <div className="mt-6">
-            <h2 className="text-base font-semibold text-gray-800 mb-3">
-              Replies
-              <span className="ml-2 text-gray-400 font-normal text-sm">({replies.length})</span>
+          <div className="mt-10">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-3">
+              Discussion
+              <span className="text-sm font-medium text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">{replies.length}</span>
             </h2>
 
-            {replyLoadState === 'error' && (
-              <div className="text-center py-6 min-w-0 break-words">
-                <p className="text-sm text-red-600 mb-2">{replyError}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Retry
-                </button>
-              </div>
-            )}
-
             {replyLoadState === 'success' && (
-              <>
+              <div className="space-y-6">
                 <ReplyList
                   replies={replies}
                   showAdminActions={showAdminActions}
@@ -195,46 +148,28 @@ export function QueryDiscussionPage() {
                   convertingReplyId={convertingReplyId}
                 />
 
-                {/* Convert to FAQ dialog */}
                 {replyToConvert && (
-                  <div className="mt-3">
-                    <AdminConvertToFaqDialog
-                      reply={replyToConvert}
-                      isConverting={convertingReplyId === replyToConvert.id}
-                      onConfirmConvert={handleConvertToFaqConfirm}
-                      onCancel={() => setReplyToConvert(null)}
-                    />
-                  </div>
+                  <AdminConvertToFaqDialog
+                    reply={replyToConvert}
+                    isConverting={convertingReplyId === replyToConvert.id}
+                    onConfirmConvert={handleConvertToFaqConfirm}
+                    onCancel={() => setReplyToConvert(null)}
+                  />
                 )}
 
-                {/* Convert success/error banners */}
-                {convertSuccess && (
-                  <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3 min-w-0 break-words">
-                    <p className="text-sm text-green-700">{convertSuccess}</p>
+                {(convertSuccess || convertError) && (
+                  <div className={`p-4 rounded-xl text-sm font-medium ${convertSuccess ? 'bg-emerald-50 text-emerald-900' : 'bg-red-50 text-red-900'}`}>
+                    {convertSuccess || convertError}
                   </div>
                 )}
-                {convertError && (
-                  <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3 min-w-0 break-words">
-                    <p className="text-sm text-red-700">{convertError}</p>
-                  </div>
-                )}
-              </>
+              </div>
             )}
           </div>
 
-          {/* Reply form */}
-          <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4 shadow-sm min-w-0 break-words">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">Add a Reply</h3>
-            {replySubmitError && (
-              <div className="mb-3 bg-red-50 border border-red-200 rounded-lg p-3 min-w-0 break-words">
-                <p className="text-sm text-red-700">{replySubmitError}</p>
-              </div>
-            )}
-            <ReplyForm
-              isSubmitting={submittingReply}
-              currentRole={user?.role ?? 'intern'}
-              onSubmit={handleReplySubmit}
-            />
+          <div className="mt-12 pt-8 border-t border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">Post a reply</h3>
+            {replySubmitError && <p className="mb-4 text-sm text-red-600">{replySubmitError}</p>}
+            <ReplyForm isSubmitting={submittingReply} currentRole={user?.role ?? 'intern'} onSubmit={handleReplySubmit} />
           </div>
         </>
       ) : null}

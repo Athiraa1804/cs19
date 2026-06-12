@@ -3,7 +3,6 @@ import type { Query } from '../../queries/types/query.types';
 import { queryService } from '../../queries/services/queryService';
 import { QueryCard } from '../../queries/components/QueryCard';
 import { QueryEmptyState } from '../../queries/components/QueryEmptyState';
-import type { QueryStatus } from '../../queries/types/query.types';
 
 type LoadState = 'loading' | 'success' | 'error';
 type FilterTab = 'all' | 'open' | 'answered' | 'verified' | 'closed';
@@ -12,7 +11,6 @@ export function AdminQueriesPage() {
   const [queries, setQueries] = useState<Query[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
 
   useEffect(() => {
@@ -35,54 +33,27 @@ export function AdminQueriesPage() {
 
   if (loadState === 'loading') {
     return (
-      <div className="max-w-lg mx-auto px-4 py-12 min-h-screen flex flex-col items-center justify-center">
-        <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-sm text-gray-500">Loading all queries…</p>
+      <div className="max-w-3xl mx-auto px-4 py-20 min-h-screen flex flex-col items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4" />
+        <p className="text-sm text-slate-500 font-medium">Loading moderation queue...</p>
       </div>
     );
   }
 
   if (loadState === 'error') {
     return (
-      <div className="max-w-lg mx-auto px-4 py-12 min-h-screen flex flex-col items-center text-center">
-        <div className="text-4xl mb-3">⚠️</div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">Couldn't load queries</h2>
-        <p className="text-sm text-red-600 mb-4">{errorMessage}</p>
+      <div className="max-w-lg mx-auto px-4 py-20 min-h-screen flex flex-col items-center text-center">
+        <div className="text-4xl mb-4">⚠️</div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">Unable to load</h2>
+        <p className="text-sm text-slate-500 mb-6">{errorMessage}</p>
         <button
           onClick={() => window.location.reload()}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+          className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-3 px-6 rounded-xl transition-all"
         >
-          Retry
+          Retry connection
         </button>
       </div>
     );
-  }
-
-  if (queries.length === 0) {
-    return (
-      <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">Query Review</h1>
-        <QueryEmptyState
-          title="No queries yet"
-          description="No queries have been submitted by interns yet."
-        />
-      </div>
-    );
-  }
-
-  const statuses: QueryStatus[] = ['open', 'answered', 'resolved', 'verified', 'closed'];
-
-  function handleStatusChange(queryId: string, status: QueryStatus) {
-    setUpdatingId(queryId);
-    queryService.updateStatus(queryId, status).then((res) => {
-      setUpdatingId(null);
-      if (res.success && res.data) {
-        setQueries((prev) => prev.map((query) => (query.id === queryId ? res.data! : query)));
-      } else {
-        setErrorMessage(res.error ?? 'Failed to update status');
-        setLoadState('error');
-      }
-    });
   }
 
   const filteredQueries = queries.filter((q) => {
@@ -94,58 +65,40 @@ export function AdminQueriesPage() {
   const filterOptions: FilterTab[] = ['all', 'open', 'answered', 'verified', 'closed'];
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Query Review</h1>
-        <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+    <div className="max-w-3xl mx-auto px-4 py-10 min-h-screen">
+      <div className="flex items-center justify-between mb-10">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900 mb-2 tracking-tight">Moderation Queue</h1>
+          <p className="text-sm text-slate-500">Manage and review all incoming intern queries.</p>
+        </div>
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
           {queries.length} total
         </span>
       </div>
 
-      <div className="flex overflow-x-auto gap-2 mb-6 pb-2">
+      <div className="flex gap-2 mb-8 overflow-x-auto pb-2 no-scrollbar">
         {filterOptions.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveFilter(tab)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap capitalize transition-colors ${activeFilter === tab
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-              }`}
+            className={`px-4 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap ${
+              activeFilter === tab
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+            }`}
           >
-            {tab}
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
 
       <div className="flex flex-col gap-4">
         {filteredQueries.length === 0 ? (
-          <div className="text-center py-8 text-sm text-gray-500">
-            No queries found for this filter.
+          <div className="text-center py-16">
+            <p className="text-sm text-slate-500">No queries found for this filter.</p>
           </div>
         ) : (
-          filteredQueries.map((q) => (
-            <div key={q.id} className="flex flex-col gap-2">
-              <QueryCard query={q} />
-              {/* <div className="flex items-center gap-2 pl-1">
-                <label htmlFor={`status-${q.id}`} className="text-xs font-medium text-gray-500">
-                  Status
-                </label>
-                <select
-                  id={`status-${q.id}`}
-                  value={q.status}
-                  disabled={updatingId === q.id}
-                  onChange={(event) => handleStatusChange(q.id, event.target.value as QueryStatus)}
-                  className="text-xs border border-gray-300 rounded-md px-2 py-1 bg-white text-gray-700 disabled:bg-gray-100"
-                >
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-            </div>
-          ))
+          filteredQueries.map((q) => <QueryCard key={q.id} query={q} />)
         )}
       </div>
     </div>

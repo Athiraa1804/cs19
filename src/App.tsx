@@ -40,79 +40,53 @@ function NavBar() {
   const { user, logout } = useAuth();
   const isActive = (path: string) => location.pathname === path;
   const admin = user?.role === 'admin';
-  const linkClass = (path: string, adminLink = false) =>
-    `relative shrink-0 whitespace-nowrap px-2.5 py-2 text-sm font-medium transition-colors after:absolute after:inset-x-2.5 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors ${isActive(path)
-      ? adminLink
-        ? 'text-purple-700 after:bg-purple-600'
-        : 'text-blue-700 after:bg-blue-600'
-      : adminLink
-        ? 'text-gray-600 hover:text-purple-700 after:bg-transparent'
-        : 'text-gray-600 hover:text-blue-700 after:bg-transparent'
+  
+  // Minimalist link style: Slate base, subtle bottom border indicator
+  const linkClass = (path: string) =>
+    `relative shrink-0 whitespace-nowrap px-3 py-2.5 text-sm font-medium transition-colors after:absolute after:inset-x-3 after:bottom-0 after:h-[2px] after:rounded-t-full after:transition-colors ${
+      isActive(path)
+        ? 'text-slate-900 after:bg-slate-900'
+        : 'text-slate-500 hover:text-slate-900 after:bg-transparent'
     }`;
 
   return (
-    <nav className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur">
-      <div className="mx-auto flex min-h-14 max-w-5xl items-center gap-2 px-3 sm:px-4">
+    <nav className="sticky top-0 z-10 border-b border-slate-200 bg-white/80 shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex min-h-16 max-w-5xl items-center gap-2 px-4 sm:px-6">
+        
         {user && (
-          <span className="mr-4 shrink-0 text-sm font-bold text-gray-800">
+          <span className="mr-6 shrink-0 text-sm font-semibold text-slate-900 tracking-tight">
             Hello, {user.name}
           </span>
         )}
-        <div className="flex min-w-0 flex-1 items-center justify-start gap-1 overflow-x-auto sm:justify-center">
-          <Link
-            to="/faqs"
-            className={linkClass('/faqs')}
-            aria-current={isActive('/faqs') ? 'page' : undefined}
-          >
-            FAQ
-          </Link>
+
+        <div className="flex min-w-0 flex-1 items-center justify-start gap-2 overflow-x-auto sm:justify-center no-scrollbar">
+          <Link to="/faqs" className={linkClass('/faqs')}>FAQs</Link>
+          
           {user && !admin && (
             <>
-              <Link
-                to="/queries"
-                className={linkClass('/queries')}
-                aria-current={isActive('/queries') ? 'page' : undefined}
-              >
-                All Questions
-              </Link>
-              <Link
-                to="/queries/raise"
-                className={linkClass('/queries/raise')}
-                aria-current={isActive('/queries/raise') ? 'page' : undefined}
-              >
-                Raise Query
-              </Link>
-              <Link
-                to="/queries/my"
-                className={linkClass('/queries/my')}
-                aria-current={isActive('/queries/my') ? 'page' : undefined}
-              >
-                My Questions
-              </Link>
+              <Link to="/queries" className={linkClass('/queries')}>Community Q&A</Link>
+              <Link to="/queries/raise" className={linkClass('/queries/raise')}>Ask a Question</Link>
+              <Link to="/queries/my" className={linkClass('/queries/my')}>My Questions</Link>
             </>
           )}
+          
           {user && admin && (
-            <Link
-              to="/admin/queries"
-              className={linkClass('/admin/queries', true)}
-              aria-current={isActive('/admin/queries') ? 'page' : undefined}
-            >
-              Query Review
-            </Link>
+            <Link to="/admin/queries" className={linkClass('/admin/queries')}>Admin Panel</Link>
           )}
         </div>
-        <div className="shrink-0 border-l border-gray-200 pl-2">
+
+        <div className="shrink-0 border-l border-slate-200 pl-4 ml-2">
           {user ? (
             <button
               onClick={logout}
-              className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors shadow-sm"
+              className="bg-white border border-slate-200 hover:border-red-200 text-slate-600 hover:bg-red-50 hover:text-red-600 font-medium py-2 px-4 rounded-lg transition-all shadow-sm text-sm"
             >
               Log out
             </button>
           ) : (
             <Link
               to="/login"
-              className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-blue-700"
+              className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:border-slate-200"
             >
               Login
             </Link>
@@ -134,15 +108,15 @@ function NavigateToHome() {
 // ── Not found page ───────────────────────────────────────────
 function NotFound() {
   return (
-    <div className="max-w-lg mx-auto px-4 py-16 text-center min-w-0">
-      <div className="text-4xl font-bold text-gray-300 mb-3">404</div>
-      <h1 className="text-xl font-bold text-gray-800 mb-2">Page Not Found</h1>
-      <p className="text-sm text-gray-500 mb-6">The page you're looking for doesn't exist.</p>
+    <div className="max-w-lg mx-auto px-4 py-20 text-center min-w-0">
+      <div className="text-5xl font-extrabold text-slate-200 mb-4 tracking-tighter">404</div>
+      <h1 className="text-2xl font-semibold text-slate-900 mb-2 tracking-tight">Page Not Found</h1>
+      <p className="text-sm text-slate-500 mb-8">The page you're looking for doesn't exist.</p>
       <Link
         to="/"
-        className="inline-flex bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 px-6 rounded-lg transition-colors"
+        className="inline-flex bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-3 px-6 rounded-xl transition-all shadow-sm"
       >
-        Go Home
+        Return to Home
       </Link>
     </div>
   );
