@@ -3,6 +3,7 @@ import type { FAQ } from '../../faq/types/faq.types';
 import { faqMockService } from '../../faq/mocks/faq.mock';
 import { queryService } from '../services/queryService';
 
+// A common suggestion shape lets the Raise Query page display FAQ and query matches together.
 export interface SimilarSuggestion {
   type: 'faq' | 'query';
   id: string;
@@ -25,6 +26,7 @@ function scoreMatch(tokens: string[], targetText: string): number {
   return matches.length / Math.max(tokens.length, targetTokens.length);
 }
 
+// FAQs and queries use different field names, so this helper creates comparable search text.
 function buildSearchText(item: Query | FAQ, isFaq: boolean): string {
   if (isFaq) {
     const f = item as FAQ;
@@ -43,7 +45,8 @@ export async function findSimilarItems(
   const tokens = tokenize(combinedText);
   if (tokens.length === 0) return [];
 
-  // Get all existing queries for this user (exclude own drafts)
+  // FAQ suggestions still use the local smart-search dataset, while query suggestions
+  // come from the real backend. This keeps duplicate prevention useful during migration.
   const [faqResult, queryResult] = await Promise.all([
     faqMockService.searchByText(combinedText),
     queryService.getAll(),
@@ -70,6 +73,7 @@ export async function findSimilarItems(
 
   if (queryResult.success && queryResult.data) {
     for (const query of queryResult.data) {
+      // Do not suggest the intern's own open question back to them as a duplicate.
       if (query.createdBy === userId && query.status === 'open') continue;
       const text = buildSearchText(query, false);
       const score = scoreMatch(tokens, text);
@@ -86,5 +90,6 @@ export async function findSimilarItems(
     }
   }
 
+  // Keep the confirmation screen short by showing only the strongest matches.
   return suggestions.sort((a, b) => b.score - a.score).slice(0, 6);
 }

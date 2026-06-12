@@ -1,5 +1,6 @@
 import type { QueryFormData } from '../types/query.types';
 
+// Keeping validation outside the form component makes the same rules reusable and testable.
 export interface ValidationErrors {
   title?: string;
   description?: string;

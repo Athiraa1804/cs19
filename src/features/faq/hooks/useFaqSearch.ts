@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect } from 'react';
-import { getFaqs } from '../services/faqService';
+import { getFaqs, markFaqHelpful } from '../services/faqService';
 import { searchFaqs, filterByCategory } from '../utils/faqSearchUtils';
 import { useDebouncedValue } from '../../../shared/hooks/useDebouncedValue';
 import type { FAQ } from '../types/faq.types';
@@ -17,8 +17,8 @@ export interface UseFaqSearchResult {
   faqs: FAQ[];
   loading: boolean;
   error: string | null;
-  retryKey: number;
   retry: () => void;
+  markHelpful: (id: string) => Promise<boolean>;
 }
 
 export function useFaqSearch(
@@ -28,13 +28,12 @@ export function useFaqSearch(
 ): UseFaqSearchResult {
   const { debounceMs = 300 } = options;
   const [allFaqs, setAllFaqs] = useState<FAQ[]>([]);
+  const [helpfulFaqIds, setHelpfulFaqIds] = useState<Set<string>>(() => new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryKey, setRetryKey] = useState(0);
-
   const debouncedSearch = useDebouncedValue(search, debounceMs);
 
-  // 1. Fetch all FAQs from service on mount / retry
+  // Fetch all FAQs from service on mount
   useEffect(() => {
     let cancelled = false;
 
@@ -58,7 +57,7 @@ export function useFaqSearch(
     return () => {
       cancelled = true;
     };
-  }, [retryKey]);
+  }, []);
 
   // 2. Apply category filter + smart search (synchronous, runs on debounced input)
   const filtered = (() => {
@@ -68,8 +67,34 @@ export function useFaqSearch(
   })();
 
   function retry() {
-    setRetryKey((k) => k + 1);
+    setAllFaqs([]);
+    setLoading(true);
+    setError(null);
+    getFaqs().then((response) => {
+      if (response.success && response.data) {
+        setAllFaqs(response.data);
+      } else {
+        setError(response.error ?? 'Unknown error loading FAQs.');
+      }
+      setLoading(false);
+    });
   }
 
-  return { faqs: filtered, loading, error, retryKey, retry };
+  async function markHelpful(id: string): Promise<boolean> {
+    if (helpfulFaqIds.has(id)) return false;
+
+    // Update the displayed count immediately and remember this vote for the current session.
+    setHelpfulFaqIds((current) => new Set(current).add(id));
+    setAllFaqs((current) =>
+      current.map((faq) =>
+        faq.id === id ? { ...faq, helpfulCount: faq.helpfulCount + 1 } : faq,
+      ),
+    );
+
+    // Persist when the backend is available. The local count remains usable for the MVP session.
+    await markFaqHelpful(id);
+    return true;
+  }
+
+  return { faqs: filtered, loading, error, retry, markHelpful };
 }

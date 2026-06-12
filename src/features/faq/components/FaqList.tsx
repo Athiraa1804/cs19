@@ -7,7 +7,7 @@ import type { FAQ } from '../types/faq.types';
 
 interface FaqListProps {
   faqs: FAQ[];
-  onHelpful?: (id: string) => void;
+  onHelpful?: (id: string) => Promise<boolean>;
 }
 
 export function FaqList({ faqs, onHelpful }: FaqListProps) {

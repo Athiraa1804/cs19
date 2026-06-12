@@ -9,6 +9,7 @@ interface Props {
 }
 
 export function AdminConvertToFaqDialog({ reply, onConfirmConvert, onCancel, isConverting }: Props) {
+  // The reply supplies the answer; the admin edits a clear question that interns can search for.
   const [faqQuestion, setFaqQuestion] = useState(
     `FAQ: ${reply.body.slice(0, 80)}${reply.body.length > 80 ? '…' : ''}`
   );

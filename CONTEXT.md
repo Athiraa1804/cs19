@@ -2,6 +2,12 @@
 
 # Crowd-Sourced FAQ Generation System
 
+> **Current implementation update (June 6, 2026):** The app now uses real JWT authentication,
+> server-side role enforcement, MongoDB persistence through Mongoose, persistent helpful counts,
+> and admin query-status endpoints. Older sections that describe `roleSim.ts`, `x-role` headers,
+> in-memory-only storage, or missing status/helpful endpoints describe the earlier MVP phase.
+> Legacy Prisma/PostgreSQL files remain temporarily for migration review but are not active runtime code.
+
 ## Project Name
 
 Crowd-Sourced FAQ Generation System for Vicharanashala Internship
@@ -1054,7 +1060,7 @@ A feature is considered complete only if:
 
 Current phase:
 
-* Tier 1 feature implementation — feature/day-3-discussion-admin-polish
+* Frontend-backend API integration — `feature/frontend-api-integration`
 
 ## Completed
 
@@ -1065,15 +1071,23 @@ Current phase:
 * priority tiers defined
 * project scaffold (React + TypeScript + Vite + Tailwind)
 * FAQ feature — full implementation
-  * types, mock data (8 FAQs, categories), service layer
+  * types, service layer, mock data (26 realistic Samagama/VINS internship FAQs)
   * smart search with synonym expansion, fuzzy/typo tolerance, ranking
   * category filter, search bar, accordion UI
   * loading, error, empty states
+* FAQ mock data uses realistic Samagama/VINS-style internship content:
+  * Samagama portal login, profile setup, CV upload, interview link issues
+  * Laptop/desktop requirements, NOC submission, offer acceptance
+  * Online vs offline mode, mentor/sync sessions
+  * Project/GitHub submission, certificate timeline, stipend and leave
+  * Support and escalation process
+  * No scraped or confidential data — all content is official-style and beginner-friendly
 * Raise Query feature
   * form, validation, duplicate detection, FAQ + similar query suggestions
   * loading/error/success states
 * My Questions page — tracks user's own queries
 * Query Discussion page — replies, verified answer badge, reply form
+  * Reply submission errors shown to user via visible error banner
 * Admin Query Review page at `/admin/queries`
   * lists all queries grouped by status
   * links to discussion page for each query
@@ -1081,51 +1095,79 @@ Current phase:
   * Verify button marks a reply as verified (verified replies float to top)
   * + FAQ button opens inline dialog, pre-fills question from reply body
   * Convert creates a new FAQ via `adminService.convertReplyToFaq()`
-* Role simulation via `roleSim.ts` — `CURRENT_ROLE = 'intern' | 'admin'`
-  * Admin-only UI gates on `isAdmin()` check
-  * Interns cannot see Verify or + FAQ buttons
+* Role-based navigation and route guards
+  * Intern nav: FAQs, Raise Query, My Questions — Query Review hidden
+  * Admin nav: FAQs, Query Review — Raise Query and My Questions hidden
+  * Route-level guards: interns redirected from `/admin/queries` → `/faqs`
+  * Route-level guards: admins redirected from `/queries/raise` and `/queries/my` → `/admin/queries`
+  * Root `/` redirects to `/queries/raise` (intern) or `/admin/queries` (admin)
+* Helpful button on FAQ answers — visible to interns, hidden for admins
 
-## Mock / Local Data (MVP)
+## Backend Integration Status
 
-All data during MVP phase is mock/local only:
+The Express TypeScript backend is integrated with MongoDB through Mongoose.
 
-* `faq.mock.ts` — static seed FAQs + session-scoped converted FAQs
-* `query.mock.ts` — static seed queries
-* `reply.mock.ts` — static seed replies + session-scoped new replies
-* `queryService`, `replyService`, `adminService`, `faqMockService` — mock service layers
+**What is connected:**
+* Frontend service layer → backend REST APIs for auth, FAQs, queries, replies, and admin actions
+* Backend runs at `http://localhost:3001`
+* MongoDB persists users, FAQs, queries, replies, helpful counts, and query statuses
+* JWT authentication restores sessions and protects role-specific routes
+* Admin-only operations are enforced by backend role guards
+* `PATCH /api/faqs/:id/helpful` persists helpful-count increments
+* `PATCH /api/queries/:id/status` persists admin query-status changes
 
-## Backend Integration Plan
+**Reply flow behavior:**
+* Both intern and admin roles use `GET/POST /api/queries/:queryId/replies`
+* The reply router receives the parent `queryId` through Express merged route parameters
+* Existing queries with zero replies return `{ success: true, data: [] }`
+* Missing parent queries return `404`
+* New replies are persisted in MongoDB and update the query reply preview
+* Admin replies move open queries to `answered`
+* The UI adds successful replies immediately and keeps typed text after failed submissions
 
-When a real backend is available, replace only the service and mock files:
+**Backend API coverage:**
+* `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me`
+* `GET /api/faqs`, `GET /api/faqs/:id`, `PATCH /api/faqs/:id/helpful`
+* `GET /api/queries`, `GET /api/queries/:id`, `POST /api/queries`
+* `PATCH /api/queries/:id/status`
+* `GET /api/users/:userId/queries`
+* `GET /api/queries/:queryId/replies`, `POST /api/queries/:queryId/replies`
+* `PATCH /api/admin/replies/:replyId/verify`
+* `POST /api/admin/replies/:replyId/convert-to-faq`
 
-| Replace this | With this |
-|---|---|
-| `queryService.ts` | `GET /queries`, `GET /queries/:id`, `POST /queries` |
-| `replyService.ts` | `GET /queries/:id/replies`, `POST /queries/:id/replies` |
-| `adminService.ts` | `POST /admin/replies/:id/verify`, `POST /admin/replies/:id/convert` |
-| `faq.mock.ts` | `GET /faqs`, `GET /faqs/search?q=` |
-
-Pages and components (`QueryDiscussionPage`, `ReplyCard`, `AdminConvertToFaqDialog`, etc.) do **not** need changes — they consume `ApiResponse<T>` from services and remain UI-only.
-
-**Note:** Add-to-FAQ logic lives entirely in `adminService.convertReplyToFaq()`. The UI calls the service and renders the result. Backend integration replaces only the service body, not the call chain.
+FAQ source rules:
+* `source: "existing"` — official/preloaded FAQs from seed data
+* `source: "crowd-sourced"` — FAQs created via Admin Convert-to-FAQ
 
 ## Pending
 
-* Zustand integration (when shared state is needed)
-* real backend integration
-* FAQ page listing all FAQs including crowd-sourced converted FAQs
+* Full browser-based regression testing across desktop and mobile widths
+* Production deployment configuration and secret rotation
+* Removal of retained legacy Prisma/PostgreSQL files after migration review
+* Real-time updates and notifications remain future scope
+
+## Service Layer Integration Map
+
+Service files call backend REST APIs and preserve the shared `ApiResponse<T>` contract.
+
+| Service file | Backend endpoints called |
+|---|---|
+| `faqService.ts` | `GET /api/faqs`, `GET /api/faqs/:id` |
+| `queryService.ts` | `GET/POST /api/queries`, `GET /api/users/:userId/queries` |
+| `replyService.ts` | `GET/POST /api/queries/:queryId/replies` |
+| `adminService.ts` | `PATCH /api/admin/replies/:replyId/verify`, `POST /api/admin/replies/:replyId/convert-to-faq` |
+
+Pages and components consume `ApiResponse<T>` from services. They do not call APIs directly and do not need changes when backend is improved.
 
 ---
 
 # Known Assumptions
 
-* Existing FAQs will initially be added as mock/seed data
-* Backend may not exist initially
-* Mock service layer will be used first
+* MongoDB is available locally or through MongoDB Atlas
+* Backend environment variables are configured in the ignored `server/.env`
 * Real-time updates are not part of MVP
 * Real AI is not part of MVP
 * Mobile-first responsiveness is required
-* Admin role is simulated via `roleSim.ts` during MVP (no backend auth)
 
 ---
 
@@ -1210,8 +1252,6 @@ Create the FAQ page UI only using the existing feature-based structure. Use stri
 
 Possible future improvements:
 
-* real backend integration
-* real authentication
 * real admin dashboard
 * notifications
 * real-time discussion updates

@@ -46,6 +46,110 @@ The MVP focuses on the most important product flow.
 * Admin verify answer flow
 * Convert verified answer into FAQ
 
+---
+
+## MERN Full-Stack Setup
+
+This project uses the MERN stack:
+
+* MongoDB persistence through Mongoose
+* Express backend API
+* React frontend
+* Node.js runtime
+* Intern/admin registration and login
+* JWT bearer-token authentication
+* bcrypt password hashing
+* Authenticated `/api/auth/me` session restore
+* Backend role guards for admin-only APIs
+* Persistent queries, replies, FAQs, users, and helpful counts
+* Zod request validation and auth rate limiting
+* Production CORS configuration through `CORS_ORIGIN`
+* Frontend `VITE_API_BASE_URL` configuration
+
+Legacy Prisma/PostgreSQL files are temporarily retained for migration review, but the active backend
+runtime and repositories use MongoDB/Mongoose.
+
+Running `npm run seed` creates these default accounts:
+
+```txt
+admin@example.com / admin12345
+intern@example.com / intern12345
+```
+
+Change `SEED_ADMIN_PASSWORD`, `SEED_INTERN_PASSWORD`, `JWT_SECRET`, and `ADMIN_REGISTRATION_CODE` before deployment.
+
+### Local Full-Stack Run
+
+Prerequisite:
+
+```powershell
+Get-Service MongoDB
+```
+
+The service should show `Running`. Configure `server/.env` using `server/.env.example`, then use two terminals.
+
+Terminal 1 — backend:
+
+```bash
+cd server
+npm run seed
+npm run dev
+```
+
+Terminal 2 — frontend:
+
+```bash
+npm run dev
+```
+
+Open:
+
+* Frontend: `http://localhost:5173`
+* Backend health: `http://localhost:3001/api/health`
+
+Seeded test accounts:
+
+```txt
+Intern: intern@example.com / intern12345
+Admin:  admin@example.com / admin12345
+```
+
+### Deployment Notes
+
+Frontend:
+
+* Build command: `npm run build`
+* Output directory: `dist`
+* Set `VITE_API_BASE_URL` to the deployed backend URL.
+
+Backend:
+
+* Build command: `npm run build`
+* Start command: `npm start`
+* Seed command: `npm run seed`
+* Set `MONGODB_URI`, `PORT`, `CORS_ORIGIN`, `JWT_SECRET`, and `ADMIN_REGISTRATION_CODE`.
+* Use MongoDB Community Server locally or MongoDB Atlas for a managed database.
+
+Local MongoDB connection:
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017/cs19
+```
+
+MongoDB Atlas connection shape:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-host>/cs19
+```
+
+Tests:
+
+```bash
+npm test
+cd server
+npm test
+```
+
 ### Tier 2 — Only If Time Exists
 
 * Category bubbles
@@ -86,9 +190,13 @@ Search:
 
 Backend:
 
-* Not required for initial MVP
-* Mock services are used first
-* Real backend integration can be added later
+* Node.js
+* Express
+* MongoDB
+* Mongoose
+* JWT authentication
+* bcrypt password hashing
+* Zod validation
 
 ---
 
@@ -314,42 +422,40 @@ Build:
 
 ---
 
-## Backend Plan
+## Backend API
 
-The first MVP uses mock services.
+The frontend service layer calls the Express API. MongoDB persistence is isolated behind Mongoose repositories.
 
-This means data comes from local mock files first.
-
-Example:
+Main endpoints:
 
 ```txt
-faq.mock.ts
-query.mock.ts
-reply.mock.ts
+POST  /api/auth/login
+POST  /api/auth/register
+GET   /api/auth/me
+
+GET   /api/faqs
+PATCH /api/faqs/:id/helpful
+
+GET   /api/queries
+GET   /api/queries/:id
+POST  /api/queries
+PATCH /api/queries/:id/status
+GET   /api/users/:userId/queries
+
+GET   /api/queries/:queryId/replies
+POST  /api/queries/:queryId/replies
+
+PATCH /api/admin/replies/:replyId/verify
+POST  /api/admin/replies/:replyId/convert-to-faq
 ```
 
-Service files should be written so that real backend APIs can replace mock data later.
+Reply behavior:
 
-Example:
-
-```ts
-faqService.getFaqs()
-queryService.createQuery()
-adminService.verifyReply()
-```
-
-Later backend routes may include:
-
-```txt
-GET /faqs
-POST /queries
-GET /queries
-GET /queries/:queryId
-POST /queries/:queryId/replies
-PATCH /replies/:replyId/verify
-PATCH /queries/:queryId/resolve
-POST /faqs/from-reply/:replyId
-```
+* Interns and admins can post replies through the same authenticated endpoint.
+* An existing query with no replies returns an empty array and displays `No replies yet`.
+* A missing parent query returns `404`.
+* Successful replies appear immediately and clear the form.
+* Admin-only Verify and Convert-to-FAQ actions remain protected.
 
 ---
 

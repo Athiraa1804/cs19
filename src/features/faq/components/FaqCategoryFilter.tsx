@@ -1,7 +1,3 @@
-// ============================================================
-// FaqCategoryFilter — horizontal scrollable category chip filter
-// ============================================================
-
 interface FaqCategoryFilterProps {
   categories: string[];
   selected: string;
@@ -15,8 +11,9 @@ export function FaqCategoryFilter({
 }: FaqCategoryFilterProps) {
   return (
     <div
-      role="group" /* aria-label="Filter by category" */
-      className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide"
+      role="group"
+      aria-label="Filter FAQs by category"
+      className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide no-scrollbar"
     >
       {categories.map((cat) => {
         const isActive = cat === selected;
@@ -26,10 +23,10 @@ export function FaqCategoryFilter({
             type="button"
             onClick={() => onSelect(cat)}
             aria-pressed={isActive}
-            className={`shrink-0 px-3 py-1.5 text-sm font-medium rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+            className={`shrink-0 px-4 py-1.5 text-sm font-medium rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 ${
               isActive
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-indigo-300'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:text-slate-900'
             }`}
           >
             {cat}
