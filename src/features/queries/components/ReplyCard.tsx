@@ -31,16 +31,14 @@ export function ReplyCard({
 
   return (
     <div
-      className={`rounded-xl border p-4 min-w-0 break-words ${
+      className={`rounded-xl border p-4 shadow-sm min-w-0 break-words ${
         reply.isVerified
           ? 'bg-green-50 border-green-200'
-          : isAdminAuthor
-          ? 'bg-white border-gray-200'
-          : 'bg-gray-50 border-gray-200'
+          : 'bg-white border-gray-200'
       }`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-2 mb-2">
+      <div className="flex flex-col gap-2 mb-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-center gap-2 min-w-0 break-words">
           <span
             className={`inline-block w-7 h-7 rounded-full text-center text-xs font-bold leading-7 shrink-0 ${
@@ -55,46 +53,54 @@ export function ReplyCard({
             <p className="text-sm font-semibold text-gray-900 leading-tight min-w-0 break-words">
               {reply.authorName}
             </p>
-            <p className="text-xs text-gray-400 leading-tight">
+            <span
+              className={`inline-flex mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${
+                isAdminAuthor
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'bg-blue-100 text-blue-700'
+              }`}
+            >
               {isAdminAuthor ? 'Admin' : 'Intern'}
-            </p>
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {reply.isVerified && (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full min-w-0 break-words">
-              ✅ Verified Answer
-            </span>
-          )}
-        </div>
+        {reply.isVerified && (
+          <span className="inline-flex self-start items-center text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full min-w-0 break-words">
+            Verified Answer
+          </span>
+        )}
       </div>
 
       {/* Body */}
-      <p className="text-sm text-gray-800 mb-3 min-w-0 break-words leading-relaxed">
+      <p className="text-sm text-gray-700 mb-3 min-w-0 break-words whitespace-pre-wrap leading-relaxed">
         {reply.body}
       </p>
 
       {/* Footer */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-xs text-gray-400">{formatDate(reply.createdAt)}</span>
 
-        {showAdminActions && !reply.isVerified && (
-          <div className="flex gap-2">
+        {showAdminActions && (
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            {!reply.isVerified && (
             <button
               onClick={() => onVerify?.(reply.id)}
               disabled={isVerifying}
-              className="text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-0 break-words"
+              className="w-full text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-0 break-words sm:w-auto"
             >
-              {isVerifying ? 'Verifying…' : '✓ Verify'}
+              {isVerifying ? 'Verifying…' : 'Verify Answer'}
             </button>
+            )}
+            {reply.isVerified && (
             <button
               onClick={() => onConvertToFaq?.(reply)}
               disabled={isConverting}
-              className="text-xs text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-2.5 py-1 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-0 break-words"
+              className="w-full text-xs text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-0 break-words sm:w-auto"
             >
-              {isConverting ? 'Converting…' : '+ FAQ'}
+              {isConverting ? 'Converting…' : 'Convert to FAQ'}
             </button>
+            )}
           </div>
         )}
       </div>

@@ -4,40 +4,23 @@ import type { AuthorRole } from '../types/reply.types';
 interface Props {
   isSubmitting: boolean;
   currentRole: AuthorRole;
-  onSubmit: (body: string, authorName: string, authorRole: AuthorRole) => void;
+  onSubmit: (body: string) => Promise<boolean>;
 }
 
 export function ReplyForm({ isSubmitting, currentRole, onSubmit }: Props) {
   const [body, setBody] = useState('');
-  const [authorName, setAuthorName] = useState('');
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!body.trim() || !authorName.trim()) return;
-    onSubmit(body.trim(), authorName.trim(), currentRole);
-    setBody('');
+    if (!body.trim()) return;
+    const submitted = await onSubmit(body.trim());
+    if (submitted) setBody('');
   }
 
-  const canSubmit = body.trim().length >= 10 && authorName.trim() && !isSubmitting;
+  const canSubmit = body.trim().length >= 10 && !isSubmitting;
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 min-w-0">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="reply-name" className="text-sm font-medium text-gray-700">
-          Your Name <span className="text-red-500">*</span>
-        </label>
-        <input
-          id="reply-name"
-          type="text"
-          value={authorName}
-          onChange={(e) => setAuthorName(e.target.value)}
-          placeholder="e.g. intern-rahul"
-          maxLength={50}
-          disabled={isSubmitting}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed min-w-0 break-words"
-        />
-      </div>
-
       <div className="flex flex-col gap-1.5">
         <label htmlFor="reply-body" className="text-sm font-medium text-gray-700">
           Reply <span className="text-red-500">*</span>

@@ -1,45 +1,56 @@
+// ============================================================
+// queryService — connects Query service layer to backend API
+// All calls go to http://localhost:3001/api/
+// Requires an authenticated backend session.
+// ============================================================
+
 import type { ApiResponse } from '../../../shared/types/apiResponse';
-import type { Query, QueryCreateInput } from '../types/query.types';
-import { mockQueries } from '../mocks/query.mock';
+import type { Query, QueryCreateInput, QueryStatus } from '../types/query.types';
+import { apiGet, apiPatch, apiPost } from '../../../shared/utils/apiClient';
 
-// In-memory store for newly created queries during session
-const createdQueries: Query[] = [];
+// ── GET /api/queries ────────────────────────────────────────
+export async function getAll(): Promise<ApiResponse<Query[]>> {
+  const res = await apiGet<Query[]>('/api/queries');
 
-let idCounter = 100;
+  return res;
+}
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// ── GET /api/users/:userId/queries ─────────────────────────
+export async function getByUser(userId: string): Promise<ApiResponse<Query[]>> {
+  // The backend permits interns to read only their own queries; admins may read any user's list.
+  const res = await apiGet<Query[]>(`/api/users/${userId}/queries`);
 
+  return res;
+}
+
+// ── GET /api/queries/:id ────────────────────────────────────
+export async function getById(id: string): Promise<ApiResponse<Query>> {
+  const res = await apiGet<Query>(`/api/queries/${id}`);
+
+  return res;
+}
+
+// ── POST /api/queries ───────────────────────────────────────
+export async function create(input: QueryCreateInput): Promise<ApiResponse<Query>> {
+  const formData = new FormData();
+  formData.append('title', input.title);
+  formData.append('description', input.description);
+  formData.append('category', input.category);
+  formData.append('tags', JSON.stringify(input.tags));
+  if (input.attachment) formData.append('attachment', input.attachment);
+
+  return apiPost<Query>('/api/queries', formData);
+}
+export async function updateStatus(id: string, status: QueryStatus): Promise<ApiResponse<Query>> {
+  // Status changes are protected by the backend's admin role guard.
+  return apiPatch<Query>(`/api/queries/${id}/status`, { status });
+}
+
+// Backward-compatible named export used by existing pages
 export const queryService = {
-  async getAll(): Promise<ApiResponse<Query[]>> {
-    await delay(400);
-    return { success: true, data: [...mockQueries, ...createdQueries] };
-  },
-
-  async getById(id: string): Promise<ApiResponse<Query>> {
-    await delay(300);
-    const all = [...mockQueries, ...createdQueries];
-    const found = all.find((q) => q.id === id);
-    if (!found) return { success: false, error: 'Query not found' };
-    return { success: true, data: found };
-  },
-
-  async getByUser(userId: string): Promise<ApiResponse<Query[]>> {
-    await delay(400);
-    const all = [...mockQueries, ...createdQueries];
-    return { success: true, data: all.filter((q) => q.createdBy === userId) };
-  },
-
-  async create(input: QueryCreateInput): Promise<ApiResponse<Query>> {
-    await delay(800);
-    const now = new Date().toISOString();
-    const newQuery: Query = {
-      id: `q-${++idCounter}`,
-      ...input,
-      status: 'open',
-      createdAt: now,
-      updatedAt: now,
-    };
-    createdQueries.push(newQuery);
-    return { success: true, data: newQuery };
-  },
+  getAll,
+  getById,
+  getByUser,
+  create,
+  updateStatus,
 };
