@@ -41,12 +41,11 @@ function NavBar() {
   const isActive = (path: string) => location.pathname === path;
   const admin = user?.role === 'admin';
   const linkClass = (path: string, adminLink = false) =>
-    `relative shrink-0 whitespace-nowrap px-2.5 py-2 text-sm font-medium transition-colors after:absolute after:inset-x-2.5 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors ${
-      isActive(path)
-        ? adminLink
-          ? 'text-purple-700 after:bg-purple-600'
-          : 'text-blue-700 after:bg-blue-600'
-        : adminLink
+    `relative shrink-0 whitespace-nowrap px-2.5 py-2 text-sm font-medium transition-colors after:absolute after:inset-x-2.5 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors ${isActive(path)
+      ? adminLink
+        ? 'text-purple-700 after:bg-purple-600'
+        : 'text-blue-700 after:bg-blue-600'
+      : adminLink
         ? 'text-gray-600 hover:text-purple-700 after:bg-transparent'
         : 'text-gray-600 hover:text-blue-700 after:bg-transparent'
     }`;
@@ -54,65 +53,70 @@ function NavBar() {
   return (
     <nav className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex min-h-14 max-w-5xl items-center gap-2 px-3 sm:px-4">
+        {user && (
+          <span className="mr-4 shrink-0 text-sm font-bold text-gray-800">
+            Hello, {user.name}
+          </span>
+        )}
         <div className="flex min-w-0 flex-1 items-center justify-start gap-1 overflow-x-auto sm:justify-center">
-            <Link
-              to="/faqs"
-              className={linkClass('/faqs')}
-              aria-current={isActive('/faqs') ? 'page' : undefined}
-            >
-              FAQ
-            </Link>
-            {user && !admin && (
-              <>
-                <Link
-                  to="/queries"
-                  className={linkClass('/queries')}
-                  aria-current={isActive('/queries') ? 'page' : undefined}
-                >
-                  All Questions
-                </Link>
-                <Link
-                  to="/queries/raise"
-                  className={linkClass('/queries/raise')}
-                  aria-current={isActive('/queries/raise') ? 'page' : undefined}
-                >
-                  Raise Query
-                </Link>
-                <Link
-                  to="/queries/my"
-                  className={linkClass('/queries/my')}
-                  aria-current={isActive('/queries/my') ? 'page' : undefined}
-                >
-                  My Questions
-                </Link>
-              </>
-            )}
-            {user && admin && (
+          <Link
+            to="/faqs"
+            className={linkClass('/faqs')}
+            aria-current={isActive('/faqs') ? 'page' : undefined}
+          >
+            FAQ
+          </Link>
+          {user && !admin && (
+            <>
               <Link
-                to="/admin/queries"
-                className={linkClass('/admin/queries', true)}
-                aria-current={isActive('/admin/queries') ? 'page' : undefined}
+                to="/queries"
+                className={linkClass('/queries')}
+                aria-current={isActive('/queries') ? 'page' : undefined}
               >
-                Query Review
+                All Questions
               </Link>
-            )}
+              <Link
+                to="/queries/raise"
+                className={linkClass('/queries/raise')}
+                aria-current={isActive('/queries/raise') ? 'page' : undefined}
+              >
+                Raise Query
+              </Link>
+              <Link
+                to="/queries/my"
+                className={linkClass('/queries/my')}
+                aria-current={isActive('/queries/my') ? 'page' : undefined}
+              >
+                My Questions
+              </Link>
+            </>
+          )}
+          {user && admin && (
+            <Link
+              to="/admin/queries"
+              className={linkClass('/admin/queries', true)}
+              aria-current={isActive('/admin/queries') ? 'page' : undefined}
+            >
+              Query Review
+            </Link>
+          )}
         </div>
         <div className="shrink-0 border-l border-gray-200 pl-2">
-            {user ? (
-              <button
-                onClick={logout}
-                className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-              >
-                Logout
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-blue-700"
-              >
-                Login
-              </Link>
-            )}
+          {user ? (
+            <button
+              onClick={logout}
+              className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors shadow-sm"
+            >
+              Log out
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-blue-700"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </div>
     </nav>
@@ -124,7 +128,7 @@ function NavigateToHome() {
   const { user, status } = useAuth();
   if (status === 'loading') return null;
   if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={user.role === 'admin' ? '/admin/queries' : '/queries/raise'} replace />;
+  return <Navigate to={user.role === 'admin' ? '/admin/queries' : '/faqs'} replace />;
 }
 
 // ── Not found page ───────────────────────────────────────────

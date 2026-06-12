@@ -6,15 +6,16 @@ import { QueryEmptyState } from '../../queries/components/QueryEmptyState';
 import type { QueryStatus } from '../../queries/types/query.types';
 
 type LoadState = 'loading' | 'success' | 'error';
+type FilterTab = 'all' | 'open' | 'answered' | 'verified' | 'closed';
 
 export function AdminQueriesPage() {
   const [queries, setQueries] = useState<Query[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
 
   useEffect(() => {
-    // This page is admin-protected, so it requests the complete query list rather than one user's list.
     queryService
       .getAll()
       .then((res) => {
@@ -69,14 +70,9 @@ export function AdminQueriesPage() {
     );
   }
 
-  // Group by status for clearer admin view
-  const openQueries = queries.filter((q) => q.status === 'open');
-  const answeredQueries = queries.filter((q) => q.status === 'answered' || q.status === 'resolved' || q.status === 'verified');
-  const closedQueries = queries.filter((q) => q.status === 'closed');
   const statuses: QueryStatus[] = ['open', 'answered', 'resolved', 'verified', 'closed'];
 
   function handleStatusChange(queryId: string, status: QueryStatus) {
-    // Track one updating query so only its status control is disabled during the request.
     setUpdatingId(queryId);
     queryService.updateStatus(queryId, status).then((res) => {
       setUpdatingId(null);
@@ -89,18 +85,48 @@ export function AdminQueriesPage() {
     });
   }
 
-  function QueryGroup({ label, qs }: { label: string; qs: Query[] }) {
-    if (qs.length === 0) return null;
-    return (
-      <section className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          {label} <span className="text-gray-400 font-normal">({qs.length})</span>
-        </h2>
-        <div className="flex flex-col gap-3">
-          {qs.map((q) => (
+  const filteredQueries = queries.filter((q) => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'answered') return q.status === 'answered' || q.status === 'resolved';
+    return q.status === activeFilter;
+  });
+
+  const filterOptions: FilterTab[] = ['all', 'open', 'answered', 'verified', 'closed'];
+
+  return (
+    <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold text-gray-900">Query Review</h1>
+        <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+          {queries.length} total
+        </span>
+      </div>
+
+      <div className="flex overflow-x-auto gap-2 mb-6 pb-2">
+        {filterOptions.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveFilter(tab)}
+            className={`px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap capitalize transition-colors ${activeFilter === tab
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {filteredQueries.length === 0 ? (
+          <div className="text-center py-8 text-sm text-gray-500">
+            No queries found for this filter.
+          </div>
+        ) : (
+          filteredQueries.map((q) => (
             <div key={q.id} className="flex flex-col gap-2">
               <QueryCard query={q} />
-              <div className="flex items-center gap-2 pl-1">
+              {/* <div className="flex items-center gap-2 pl-1">
                 <label htmlFor={`status-${q.id}`} className="text-xs font-medium text-gray-500">
                   Status
                 </label>
@@ -117,26 +143,11 @@ export function AdminQueriesPage() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
             </div>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <div className="max-w-lg mx-auto px-4 py-6 min-h-screen min-w-0">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-900">Query Review</h1>
-        <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
-          {queries.length} total
-        </span>
+          ))
+        )}
       </div>
-
-      <QueryGroup label="Needs Attention" qs={openQueries} />
-      <QueryGroup label="In Progress / Resolved" qs={answeredQueries} />
-      <QueryGroup label="Closed" qs={closedQueries} />
     </div>
   );
 }
